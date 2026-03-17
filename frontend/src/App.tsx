@@ -1,7 +1,7 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import { ModuloAuth } from './modulos/auth';
+import { LoginPage } from './modulos/auth/LoginPage';
 import { AdminLayout } from './layouts/AdminLayout';
 import { ModuloInicio } from './modulos/inicio';
 import { ModuloLogistica } from './modulos/logistica';
@@ -26,7 +26,7 @@ export default function App() {
     <Router>
       <Routes>
         {/* Ruta pública / Login */}
-        <Route path="/login" element={!token ? <ModuloAuth /> : <Navigate to="/panel/inicio" replace />} />
+        <Route path="/login" element={!token ? <LoginPage /> : <Navigate to="/panel/inicio" replace />} />
         
         {/* Ruta base */}
         <Route path="/" element={<Navigate to={token ? "/panel/inicio" : "/login"} replace />} />

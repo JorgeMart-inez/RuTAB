@@ -1,6 +1,6 @@
 // frontend/src/modulos/logistica/vehiculos/VehiculosPage.tsx
 import React from "react";
-import { VehiculoForm } from "./VehiculoForm";
+import { VehiculoForm } from "../vehiculos/vehiculoForm";
 import { useVehiculosPage } from "./hooks/useVehiculosPage";
 import { ConfirmModal } from "../../../components/ui/ConfirmModal"; // Ajusta esta ruta a donde guardaste el modal genérico
 

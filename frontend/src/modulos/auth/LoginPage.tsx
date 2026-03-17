@@ -4,7 +4,7 @@ import { Truck, User, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner"; // Importamos toast
 import { useLogin } from "./hooks/useLogin";
 
-export const ModuloAuth = () => {
+export const LoginPage = () => {
   const {
     correo,
     setCorreo,
