@@ -38,7 +38,7 @@ model clientes {
   nombre      String
   telefono    String?
   direccion   String?
-  correo      String?
+  correo      String?                   @unique
   coordenadas Unsupported("geography")?
   pedidos     pedidos[]
 }
@@ -64,7 +64,7 @@ model evidencias {
 }
 
 model historial_rastreo {
-  id          BigInt                    @id @default(autoincrement())
+  id          Int                    @id @default(autoincrement())
   chofer_id   String?                   @db.Uuid
   ruta_id     String?                   @db.Uuid
   coordenadas Unsupported("geography")?
@@ -82,6 +82,8 @@ model incidencias {
   foto_url    String?
   choferes    choferes? @relation(fields: [chofer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   rutas       rutas?    @relation(fields: [ruta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model pedidos {
@@ -93,6 +95,8 @@ model pedidos {
   detalles_ruta     detalles_ruta[]
   evidencias        evidencias[]
   clientes          clientes?       @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model rutas {
@@ -111,10 +115,12 @@ model rutas {
   choferes                 choferes?           @relation(fields: [chofer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   administradores          administradores?    @relation(fields: [creado_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
   vehiculos                vehiculos?          @relation(fields: [vehiculo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model seguimiento_real_time {
-  id                   BigInt                    @id @default(autoincrement())
+  id                   Int                    @id @default(autoincrement())
   vehiculo_id          String?                   @db.Uuid
   coordenadas_actuales Unsupported("geography")?
   ultima_actualizacion DateTime?                 @default(now()) @db.Timestamptz(6)
