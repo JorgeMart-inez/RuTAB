@@ -18,7 +18,10 @@ export class VehiclesService {
   }
 
   async findOne(id: string) {
-    return this.prisma.vehiculos.findUnique({ where: { id } });
+    const vehicle = this.prisma.vehiculos.findUnique({ where: { id } });
+    if (!vehicle) throw new NotFoundException('El vehículo no ha sido encontrado.');
+
+    return vehicle;
   }
   
   async update(id: string, data: Partial<CreateVehicleDto>) {
