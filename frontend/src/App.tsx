@@ -4,9 +4,10 @@ import { useAuth } from './context/AuthContext';
 import { ModuloAuth } from './modules/auth';
 import { AdminLayout } from './layouts/AdminLayout';
 import { ModuloInicio } from './modules/index';
-import { ModuloLogistica } from './modules/logistic/logistic-Index';
+import { ModuloLogistica } from './modules/management/logistic-Index';
 import { ModuloAuditoria } from './modules/audit';
-import { VehiclesPage } from './modules/logistic/vehicles/VehiclesPage';
+import { VehiclesPage } from './modules/management/vehicles/VehiclesPage';
+import { CustomersPage } from './modules/management/customers/customersPage';
 
 // 1. CREAMOS EL WRAPPER AQUÍ MISMO
 const RoleGuard = ({ allowedRoles, children }: { allowedRoles: string[], children: JSX.Element }) => {
@@ -46,6 +47,12 @@ export default function App() {
           <Route path="logistica/vehiculos" element={
             <RoleGuard allowedRoles={['logístico']}>
               <VehiclesPage />
+            </RoleGuard>
+          } />
+
+          <Route path="logistica/clientes" element={
+            <RoleGuard allowedRoles={['logístico']}>
+              <CustomersPage />
             </RoleGuard>
           } />
 

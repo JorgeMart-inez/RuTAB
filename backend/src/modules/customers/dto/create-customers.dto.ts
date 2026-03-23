@@ -21,4 +21,16 @@ export class CreateCustomerDto {
   // Coordenadas
 
   // pedidos
+
+  @IsString()
+  @IsOptional()
+  codigo?: string;
+
+  @IsString()
+  @IsOptional()
+  contacto?: string;
+
+  @IsString()
+  @IsOptional()
+  estatus?: string;
 }

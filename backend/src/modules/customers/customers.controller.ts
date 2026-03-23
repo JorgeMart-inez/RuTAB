@@ -26,7 +26,7 @@ export class CustomersController {
     return this.customersService.findOne(id);
   }
 
-  @Patch('id:')
+  @Patch(':id')
   @Roles('superAdmin', 'logístico')
   update(@Param('id') id: string, @Body() updateDto: Partial<CreateCustomerDto>) {
     return this.customersService.update(id, updateDto);

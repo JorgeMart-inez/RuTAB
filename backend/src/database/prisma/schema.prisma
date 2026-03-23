@@ -41,6 +41,10 @@ model clientes {
   correo      String?                   @unique
   coordenadas Unsupported("geography")?
   pedidos     pedidos[]
+  codigo      String?
+  contacto    String?
+  estatus     String?  @default("Activo")
+  createdAt   DateTime  @default(now())
 }
 
 model detalles_ruta {
