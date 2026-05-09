@@ -1,7 +1,6 @@
 // src/modules/management/evidences/components/EvidenceReviewModal.tsx
 import {
   X,
-  User,
   MapPin,
   CheckCircle,
   ShieldAlert,

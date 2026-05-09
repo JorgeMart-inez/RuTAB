@@ -1,5 +1,6 @@
 import { FileImage, AlertTriangle, CheckCircle2, ImageOff } from "lucide-react";
 import { Incident, EstadoIncidencia } from "../types/incident.types";
+import { formatToLocalDateTime } from "../../../../utils/dateHelpers";
 
 interface Props {
   incidents: Incident[];
@@ -18,19 +19,6 @@ export const IncidentTable = ({ incidents, onReview }: Props) => {
       default: // pendiente
         return "bg-gray-100 text-gray-700 border-gray-200";
     }
-  };
-
-  // Función para evitar que el navegador reste las 6 horas de UTC-6
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleString("es-MX", {
-      timeZone: "UTC", // Fuerza a mostrar la hora tal cual viene de la BD
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
   };
 
   return (
@@ -85,7 +73,7 @@ export const IncidentTable = ({ incidents, onReview }: Props) => {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {formatFecha(item.createdAt)}
+                  {formatToLocalDateTime(item.createdAt)}
                 </td>
                 <td className="px-6 py-4">
                   <span

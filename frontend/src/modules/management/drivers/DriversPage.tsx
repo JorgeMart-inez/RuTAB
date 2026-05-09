@@ -2,8 +2,8 @@ import React from "react";
 import { DriversForm } from "./DriversForm";
 import { useDriverPage } from "./hooks/useDriversPage";
 import { ConfirmModal } from "../../../components/ui/ConfirmModal";
-import { Search, Plus, Users, UserCheck, Package,
-         Edit2, Trash2, Phone, Mail, MapPin, User, Award } from "lucide-react";
+import { Search, Plus,
+         Edit2, Trash2, Phone, Mail, User, Award } from "lucide-react";
 
 
 /**

@@ -1,5 +1,4 @@
 // /src/modules/clientes/CustomersPage.tsx
-import React from 'react';
 import {
   Search, Plus, Users, UserCheck, Package,
   Edit2, Trash2, Phone, Mail, MapPin, User

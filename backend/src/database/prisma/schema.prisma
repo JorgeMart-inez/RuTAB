@@ -41,7 +41,7 @@ model clientes {
   codigo      String?
   contacto    String?
   estatus     String?                  @default("Activo")
-  created_at  DateTime                 @default(now()) @db.Timestamp(6)
+  created_at  DateTime                 @default(now()) @db.Timestamptz(6)
   pedidos     pedidos[]
 }
 
@@ -77,8 +77,8 @@ model incidencias {
   coordenadas_incidente Unsupported("geography")?
   estado_incidencia     String?                   @default("pendiente")
   categoria             String                    @default("camino")
-  created_at            DateTime                  @default(now()) @db.Timestamp(6)
-  updated_at            DateTime                  @default(now()) @db.Timestamp(6)
+  created_at            DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                  @default(now()) @db.Timestamptz(6)
   pedidos               pedidos?                  @relation(fields: [pedido_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   rutas                 rutas?                    @relation(fields: [ruta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -91,8 +91,8 @@ model pedidos {
   descripcion_carga String?
   codigo_rastreo    String          @unique
   estado_pedido     String?         @default("pendiente")
-  created_at        DateTime        @default(now()) @db.Timestamp(6)
-  updated_at        DateTime        @default(now()) @db.Timestamp(6)
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
   detalles_ruta     detalles_ruta[]
   evidencias        evidencias[]
   incidencias       incidencias[]
@@ -109,8 +109,8 @@ model rutas {
   distancia_total_estimada Decimal?               @db.Decimal
   tiempo_estimado_entrega  DateTime?              @db.Timestamptz(6)
   estatus_ruta             String?                @default("borrador")
-  created_at               DateTime               @default(now()) @db.Timestamp(6)
-  updated_at               DateTime               @default(now()) @db.Timestamp(6)
+  created_at               DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime               @default(now()) @db.Timestamptz(6)
   detalles_ruta            detalles_ruta[]
   incidencias              incidencias[]
   choferes                 choferes?              @relation(fields: [chofer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

@@ -10,6 +10,7 @@ import {
 import { Incident } from "../types/incident.types";
 import { GoogleMap, MarkerF, useJsApiLoader } from "@react-google-maps/api";
 import { useState, useEffect } from "react";
+import { formatToLocalDateTime } from "../../../../utils/dateHelpers";
 
 interface Props {
   incident: Incident | null;
@@ -54,18 +55,6 @@ export const IncidentReviewModal = ({
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleString("es-MX", {
-      timeZone: "UTC",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
   };
 
   const center = {
@@ -114,7 +103,7 @@ export const IncidentReviewModal = ({
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-700">
                   <Calendar size={18} className="text-blue-500" />
-                  <p>{formatFecha(incident.createdAt)}</p>
+                  <p>{formatToLocalDateTime(incident.createdAt)}</p>
                 </div>
                 <div className="flex items-start gap-3 text-sm text-gray-700">
                   <FileText

@@ -1,6 +1,12 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS postgis;
 
+ALTER DATABASE rutab SET timezone TO 'UTC';
+/*
+Cierra tu conexion con el cliente que estes usando, vuelve a conectarte y verifica que haya funcionado:
+  SHOW TIMEZONE;
+Es probable que veas algo distinto a UTC si es asi busca como cambiar la zona horaria de tu cliente porque la bd ya esta en UTC
+*/
 
 BEGIN;
 -- =========================
@@ -44,7 +50,7 @@ CREATE TABLE public.clientes (
   codigo text,
   contacto text,
   estatus text DEFAULT 'Activo',
-  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT clientes_pkey PRIMARY KEY (id)
 );
 
@@ -73,10 +79,10 @@ CREATE TABLE public.rutas (
   codigo_rastreo text NOT NULL UNIQUE,
   fecha_programada date,
   distancia_total_estimada numeric,
-  tiempo_estimado_entrega timestamp with time zone,
+  tiempo_estimado_entrega timestamptz,
   estatus_ruta text DEFAULT 'borrador',
-  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT rutas_pkey PRIMARY KEY (id),
   CONSTRAINT rutas_chofer_id_fkey FOREIGN KEY (chofer_id) REFERENCES public.choferes(id),
   CONSTRAINT rutas_creado_por_fkey FOREIGN KEY (creado_por) REFERENCES public.administradores(id),
@@ -92,8 +98,8 @@ CREATE TABLE public.pedidos (
   descripcion_carga text,
   codigo_rastreo text NOT NULL UNIQUE,
   estado_pedido text DEFAULT 'pendiente',
-  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT pedidos_pkey PRIMARY KEY (id),
   CONSTRAINT pedidos_cliente_id_fkey FOREIGN KEY (cliente_id) REFERENCES public.clientes(id)
 );
@@ -122,7 +128,7 @@ CREATE TABLE public.evidencias (
   foto_url text,
   firma_url text,
   coordenadas_entrega GEOGRAPHY(Point, 4326),
-  fecha_hora timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+  fecha_hora timestamptz DEFAULT CURRENT_TIMESTAMP,
   estado_evidencia text DEFAULT 'alerta',
   CONSTRAINT evidencias_pkey PRIMARY KEY (id),
   CONSTRAINT evidencias_pedido_id_fkey FOREIGN KEY (pedido_id) REFERENCES public.pedidos(id)
@@ -134,7 +140,7 @@ CREATE TABLE public.evidencias (
 CREATE TABLE public.ubicacion_actual (
     ruta_id UUID PRIMARY KEY,
     ultima_coordenada GEOGRAPHY(Point, 4326) NOT NULL,
-    fecha_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     velocidad_kmh FLOAT, -- Opcional: útil para saber si está atorado en tráfico
     nivel_bateria INTEGER, -- Opcional: útil para soporte técnico si la app se apaga
     CONSTRAINT fk_ruta_actual FOREIGN KEY (ruta_id) REFERENCES public.rutas(id) ON DELETE CASCADE
@@ -149,8 +155,8 @@ CREATE TABLE public.trayectos_finalizados (
     ruta_id UUID UNIQUE NOT NULL,
     geometria_ruta GEOGRAPHY(LineString, 4326) NOT NULL,
     distancia_total_km FLOAT, -- Calculada al cerrar la ruta
-    fecha_inicio TIMESTAMP WITH TIME ZONE,
-    fecha_fin TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    fecha_inicio TIMESTAMPTZ,
+    fecha_fin TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_ruta_finalizada FOREIGN KEY (ruta_id) REFERENCES public.rutas(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_trayectos_geog ON public.trayectos_finalizados USING GIST (geometria_ruta);
@@ -168,8 +174,8 @@ CREATE TABLE public.incidencias (
   coordenadas_incidente GEOGRAPHY(Point, 4326),
   estado_incidencia text DEFAULT 'pendiente',
   categoria text NOT NULL DEFAULT 'camino',
-  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT incidencias_pkey PRIMARY KEY (id),
   CONSTRAINT incidencias_ruta_id_fkey FOREIGN KEY (ruta_id) REFERENCES public.rutas(id),
   CONSTRAINT incidencias_pedido_id_fkey FOREIGN KEY (pedido_id) REFERENCES public.pedidos(id)

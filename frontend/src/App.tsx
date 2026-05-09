@@ -12,7 +12,7 @@ import { useAuth } from "./context/AuthContext";
 import { RoleGuard } from "./components/guards/RoleGuard";
 import { ContentLoader } from "./components/ui/ContentLoader";
 import { AdminLayout } from "./layouts/AdminLayout";
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { useAlertListener } from "../src/modules/monitoring/hooks/useAlertListener";
 import { Toaster } from "react-hot-toast"; // Para que los mensajes se vean
 
@@ -50,7 +50,7 @@ export const DashboardLayout = ({ children }: Props) => {
       {/* El Toaster permite que las notificaciones floten en la pantalla */}
       <Toaster position="top-right" />
 
-      <aside style={{ width: '250px', background: '#123a5d', color: 'white' }}>
+      <aside style={{ width: "250px", background: "#123a5d", color: "white" }}>
         {/* Aquí irá tu menú lateral después */}
         <p style={{ padding: "20px" }}>RuTAB Admin</p>
       </aside>
@@ -70,7 +70,9 @@ const ModuloAuth = lazy(() =>
   import("./modules/auth").then((m) => ({ default: m.ModuloAuth })),
 );
 const DashboardPage = lazy(() =>
-  import("./modules/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })),
+  import("./modules/dashboard/DashboardPage").then((m) => ({
+    default: m.DashboardPage,
+  })),
 );
 const ModuloOptimizacion = lazy(() =>
   import("./modules/optimization/OptimizationIndex").then((m) => ({
@@ -180,10 +182,12 @@ export default function App() {
               }
             >
               {/* Ruta pública para cualquier usuario autenticado */}
-              <Route path="inicio"
-                element={<RoleGuard allowedRoles={["superAdmin", "logístico"]}>
-                  <DashboardPage />
-                </RoleGuard>
+              <Route
+                path="inicio"
+                element={
+                  <RoleGuard allowedRoles={["superAdmin", "logístico"]}>
+                    <DashboardPage />
+                  </RoleGuard>
                 }
               />
 

@@ -17,7 +17,6 @@ import { forwardRef, Inject } from '@nestjs/common';
 import { MonitoringGateway } from '../../modules/monitoring/gateways/monitoring.gateway';
 import { DashboardGateway } from '../../modules/dashboard/dashboard.gateway';
 import { RedisService } from '../redis/redis.service';
-import { getCDMXDate } from 'src/common/formatter/dateFormat';
 
 @Injectable()
 export class EvidenceService {
@@ -151,7 +150,7 @@ export class EvidenceService {
           where: { id: pedidoId },
           data: {
             estado_pedido: 'entregado',
-            updated_at: getCDMXDate(),
+            updated_at: new Date(),
           },
         });
 
@@ -229,7 +228,7 @@ export class EvidenceService {
         rutaId: dto.rutaId,
         categoria: dto.categoria || 'camino',
         coordenadas: { lat: dto.latitude, lng: dto.longitude },
-        fecha: getCDMXDate(),
+        fecha: new Date(),
       });
 
       return queryResult;
@@ -320,7 +319,7 @@ export class EvidenceService {
           where: { id: pedidoId },
           data: {
             estado_pedido: 'fallido',
-            updated_at: getCDMXDate(),
+            updated_at: new Date(),
           },
         });
 
@@ -413,7 +412,7 @@ export class EvidenceService {
           },
           data: {
             estado_pedido: 'fallido',
-            updated_at: getCDMXDate(),
+            updated_at: new Date(),
           },
         });
 
@@ -447,7 +446,7 @@ export class EvidenceService {
           where: { id: dto.rutaId },
           data: {
             estatus_ruta: 'finalizada',
-            updated_at: getCDMXDate(),
+            updated_at: new Date(),
           },
         });
 
@@ -544,7 +543,7 @@ export class EvidenceService {
           }),
           ...(dto.descripcion && { descripcion: dto.descripcion }),
           ...(dto.tipo && { tipo: dto.tipo }),
-          updated_at: getCDMXDate(),
+          updated_at: new Date(),
         },
       });
 

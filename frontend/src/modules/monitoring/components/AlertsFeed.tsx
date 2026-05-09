@@ -1,7 +1,7 @@
 // monitoring/src/components/AlertsFeed.tsx
 import React from 'react';
 import { AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
-import { formatTimeLiteral } from '../../../utils/dateHelpers';
+import { formatToLocalDateTime } from '../../../utils/dateHelpers';
 
 interface Props {
     incidencias: any[];
@@ -34,8 +34,7 @@ export const AlertsFeed: React.FC<Props> = ({ incidencias }) => {
                 </span>
                 
                 <span className="text-[10px] text-slate-400">
-                    {/* {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} */}
-                    {formatTimeLiteral(item.created_at)}
+                    {formatToLocalDateTime(item.created_at)}
                 </span>
             </div>
             <p className="text-sm font-bold text-slate-800">{item.tipo}</p>

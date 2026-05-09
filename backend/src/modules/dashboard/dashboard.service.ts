@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { getStartOfDayCDMX } from 'src/common/formatter/dateFormat';
 
 @Injectable()
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
   async getDailyStats() {
-    const today = getStartOfDayCDMX();
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
 
     const [rutasActivas, pedidosStats, rawIncidencias] = await Promise.all([
       this.prisma.rutas.count({
@@ -61,7 +61,7 @@ export class DashboardService {
 
   async getActiveOperations() {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
     const rutas = await this.prisma.rutas.findMany({
       where: {

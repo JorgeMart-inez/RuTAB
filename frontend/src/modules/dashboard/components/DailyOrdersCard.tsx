@@ -1,5 +1,4 @@
 // src/modules/dashboard/components/DailyOrdersCard.tsx
-import React from 'react';
 import { Package, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 export const DailyOrdersCard = ({ pedidos }: any) => {

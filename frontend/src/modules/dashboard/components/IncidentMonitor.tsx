@@ -1,7 +1,6 @@
-import React from 'react';
 import { AlertCircle, Truck, Clock, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { formatTimeLiteral } from '../../../utils/dateHelpers';
+import { formatToLocalTime } from '../../../utils/dateHelpers';
 
 export const IncidentMonitor = ({ data }: any) => {
     const navigate = useNavigate();
@@ -53,9 +52,8 @@ export const IncidentMonitor = ({ data }: any) => {
                                     <div className="flex justify-between items-start gap-2">
                                         <p className="font-bold text-gray-800 flex-1">{item.descripcion}</p>
                                         <span className="text-[8px] text-gray-400 font-bold whitespace-nowrap">
-                                            {/*new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })*/}
+                                            {formatToLocalTime(item.created_at)}
                                             
-                                            {formatTimeLiteral(item.created_at)}
                                         </span>
                                     </div>
                                     <p className="text-blue-600 mt-2 uppercase font-black tracking-widest text-[9px]">

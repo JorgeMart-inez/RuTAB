@@ -1,4 +1,4 @@
-import { MapPin, Gauge, Fuel, Clock } from 'lucide-react'; // Usando Lucide para los iconos
+import { MapPin } from 'lucide-react'; // Usando Lucide para los iconos
 
 interface VehicleCardProps {
   id: string;

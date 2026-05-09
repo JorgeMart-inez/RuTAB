@@ -1,6 +1,6 @@
 // src/modules/dashboard/components/StatsGrid.tsx
 import React from 'react';
-import { Truck, Package, XCircle, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Truck, Package, AlertTriangle, CheckCircle } from 'lucide-react';
 import { DashboardStats } from '../types';
 
 export const StatsGrid: React.FC<{ stats: DashboardStats | null }> = ({ stats }) => {

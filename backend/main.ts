@@ -5,6 +5,12 @@ import { AppModule } from 'app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // 1. Confirmación de zona horaria (útil para debug en producción)
+  console.log(
+    `🌍 Zona horaria del servidor: ${process.env.TZ || 'No definida (usando sistema)'}`,
+  );
+  console.log(`⏰ Hora actual del servidor: ${new Date().toISOString()}`);
+
   // 2. Agrega esta configuración de validación global
   app.useGlobalPipes(
     new ValidationPipe({

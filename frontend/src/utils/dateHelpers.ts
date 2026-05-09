@@ -1,20 +1,34 @@
 /**
- * Formatea la hora ignorando la conversión a UTC del navegador.
- * Ideal para columnas 'timestamp without time zone'.
+ * Convierte una fecha UTC a la hora local del navegador
+ * @param date String de fecha ISO o objeto Date
+ * @returns String formateado (ej: 02:18 PM)
  */
-export const formatTimeLiteral = (dateInput: string | Date): string => {
-  if (!dateInput) return "";
+export const formatToLocalTime = (date: string | Date): string => {
+  if (!date) return "--:--";
 
-  // Si es un objeto Date, lo pasamos a string ISO primero
-  const dateStr =
-    typeof dateInput === "string" ? dateInput : dateInput.toISOString();
+  const dateObj = new Date(date);
 
-  // Quitamos la 'Z' para que el navegador lo trate como hora local "tal cual"
-  const cleanDate = new Date(dateStr.replace("Z", ""));
-
-  return cleanDate.toLocaleTimeString("es-MX", {
+  return new Intl.DateTimeFormat(undefined, {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true, // Esto te dará el formato 11:23 PM
-  });
+    hour12: true, // Cambia a false si prefieres formato 24h
+  }).format(dateObj);
+};
+
+/**
+ * Opcional: Formateador completo (Fecha y Hora)
+ */
+export const formatToLocalDateTime = (date: string | Date): string => {
+  if (!date) return "N/A";
+
+  const dateObj = new Date(date);
+
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).format(dateObj);
 };

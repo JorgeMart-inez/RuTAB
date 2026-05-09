@@ -5,7 +5,6 @@ import {
   Truck,
   CheckCircle,
   XCircle,
-  Search,
   Settings2,
   Package
 } from "lucide-react";
@@ -14,18 +13,13 @@ import { OrdersForm } from "./OrdersForm";
 import { Order } from "./types";
 
 export const OrdersPage: React.FC = () => {
-  const { orders, isLoading, fetchOrders } = useOrderPage();
+  const { orders, fetchOrders } = useOrderPage();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Estados para búsqueda y filtrado
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
-
-  const handleEdit = (order: Order) => {
-    setSelectedOrder(order);
-    setIsModalOpen(true);
-  };
 
   // Lógica de Filtrado Dinámico (Para no mostrar borrados y aplicar búsqueda)
   const filteredOrders = useMemo(() => {
