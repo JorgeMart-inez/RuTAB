@@ -55,13 +55,13 @@ export class RouteLoaderService {
         });
 
         if (!cliente) {
-          const coordsRaw = row.coordenadas || '';
-          const [lat, lng] = coordsRaw.split(',').map((c) => c?.trim());
+          const lat = row.latitud_cliente?.trim();
+          const lng = row.longitud_cliente?.trim();
 
-          // Si no hay latitud o longitud, lanzamos un error claro antes de ir a la BD
-          if (!lat || !lng || lat === 'undefined' || lng === 'undefined') {
+          // Validación robusta de presencia
+          if (!lat || !lng || isNaN(Number(lat)) || isNaN(Number(lng))) {
             throw new BadRequestException(
-              `Error en cliente ${row.nombre_cliente}: Las coordenadas deben ser 'lat,lng' (actual: ${coordsRaw})`,
+              `Fila ${filaNum}: Coordenadas inválidas para el cliente ${row.nombre_cliente}. Se esperaba latitud y longitud numérica.`,
             );
           }
 
@@ -72,7 +72,7 @@ export class RouteLoaderService {
               `
       INSERT INTO public.clientes (nombre, telefono, direccion, correo, coordenadas, codigo, contacto)
       VALUES ($1, $2, $3, $4, ST_GeographyFromText('SRID=4326;${wktPoint}'), $5, $6)
-    `,
+      `,
               row.nombre_cliente,
               row.telefono_cliente,
               row.direccion_cliente,
@@ -82,7 +82,7 @@ export class RouteLoaderService {
             );
           } catch (dbError) {
             throw new BadRequestException(
-              `Error de base de datos al crear cliente ${row.nombre_cliente}. Revisa el formato de coordenadas.`,
+              `Fila ${filaNum}: Error de base de datos al crear cliente. Verifica que el correo sea único.`,
             );
           }
 
