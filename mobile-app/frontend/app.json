@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "rutab-app",
+    "slug": "rutab-app",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png",
@@ -46,7 +46,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.jesusdev22.frontend",
+      "package": "com.jesusdev22.rutabapp",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -57,7 +57,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "f53edbb7-c1d1-47e4-bed0-10fe3ecf44d8"
+        "projectId": "dfefb908-0f38-48d2-abea-b8223f5b009a"
       }
     }
   }
