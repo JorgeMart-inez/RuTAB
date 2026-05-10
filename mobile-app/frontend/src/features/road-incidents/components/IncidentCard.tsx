@@ -4,6 +4,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Incident } from '../types/road-incidents.types';
+import { formatToLocalDateTime } from '@/utils/dateHelpers';
 
 interface Props {
   item: Incident;
@@ -23,15 +24,7 @@ export const IncidentCard = ({ item, onPress, onDelete, getStatusColor }: Props)
         <View className="flex-row items-center">
           <View className="mr-3 items-end">
             <Text className="text-[10px] font-bold text-gray-400">
-              {new Date(item.createdAt).toLocaleDateString('es-MX', { timeZone: 'UTC' })}
-            </Text>
-            <Text className="text-[9px] font-medium text-gray-400">
-              {new Date(item.createdAt).toLocaleTimeString('es-MX', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-                timeZone: 'UTC',
-              })}
+              {formatToLocalDateTime(item.createdAt)}
             </Text>
           </View>
 
