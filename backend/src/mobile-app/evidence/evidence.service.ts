@@ -479,26 +479,30 @@ export class EvidenceService {
 
   async getIncidentsByChofer(choferId: string) {
     try {
+      // 1. Consulta SQL para obtener incidencias filtradas por chofer y estatus de ruta
       const incidents: any[] = await this.prisma.$queryRaw`
-        SELECT 
-          i.id, i.tipo, i.descripcion, i.estado_incidencia as "estado",
-          i.foto_url as "fotoUrl", i.pedido_id as "pedidoId",
-          i.ruta_id as "rutaId", i.created_at as "createdAt",
-          i.categoria,
-          ST_X(i.coordenadas_incidente::geometry) as "longitude",
-          ST_Y(i.coordenadas_incidente::geometry) as "latitude",
-          p.codigo_rastreo as "codigoPedido"
-        FROM incidencias i
-        JOIN rutas r ON i.ruta_id = r.id
-        LEFT JOIN pedidos p ON i.pedido_id = p.id
-        WHERE r.chofer_id = ${choferId}::uuid
-          AND i.categoria = 'camino' 
-        ORDER BY i.created_at DESC
-      `;
+      SELECT 
+        i.id, i.tipo, i.descripcion, i.estado_incidencia as "estado",
+        i.foto_url as "fotoUrl", i.pedido_id as "pedidoId",
+        i.ruta_id as "rutaId", i.created_at as "createdAt",
+        i.categoria,
+        ST_X(i.coordenadas_incidente::geometry) as "longitude",
+        ST_Y(i.coordenadas_incidente::geometry) as "latitude",
+        p.codigo_rastreo as "codigoPedido"
+      FROM incidencias i
+      JOIN rutas r ON i.ruta_id = r.id
+      LEFT JOIN pedidos p ON i.pedido_id = p.id
+      WHERE r.chofer_id = ${choferId}::uuid
+        AND i.categoria = 'camino' 
+        AND r.estatus_ruta = 'en_proceso' -- Filtro de ruta activa añadido
+      ORDER BY i.created_at DESC
+    `;
 
       if (incidents.length === 0) return [];
 
+      // 2. Proceso de firma de URLs de Supabase
       const paths = incidents.map((i) => i.fotoUrl).filter(Boolean);
+
       if (paths.length > 0) {
         const { data: signedUrls, error } = await this.supabase.storage
           .from('evidencias')
@@ -508,22 +512,25 @@ export class EvidenceService {
           this.logger.error(
             `Error al firmar URLs de Supabase: ${error.message}`,
           );
-        } else {
-          return incidents.map((incident) => {
-            const signed = signedUrls.find((s) => s.path === incident.fotoUrl);
-            return {
-              ...incident,
-              fotoUrl: signed ? signed.signedUrl : null,
-            };
-          });
+          // Si hay error en la firma, devolvemos los datos originales (con path, no URL)
+          return incidents;
         }
+
+        // Mapeamos las URLs firmadas a los incidentes correspondientes
+        return incidents.map((incident) => {
+          const signed = signedUrls.find((s) => s.path === incident.fotoUrl);
+          return {
+            ...incident,
+            fotoUrl: signed ? signed.signedUrl : null,
+          };
+        });
       }
 
       return incidents;
     } catch (error) {
       this.logger.error(`Error en getIncidentsByChofer: ${error.message}`);
       throw new InternalServerErrorException(
-        'Error al consultar el historial de incidencias.',
+        'Error al consultar el historial de incidencias en proceso.',
       );
     }
   }
