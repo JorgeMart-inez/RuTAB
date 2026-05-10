@@ -1,3 +1,7 @@
-placas_vehiculo,correo_chofer,fecha,codigo_ruta,nombre_cliente,correo_cliente,telefono_cliente,direccion_cliente,coordenadas,codigo_cliente,contacto_cliente,codigo_pedido,descripcion_pedido
-ABC-123,chofer@gmail.com,2026-05-25,RT-003,Abarrotes La Bendicion,contacto3@bendicion.com,5551234567,Av. Principal 123 Centro,"19.4326,-99.1332",CLI-003,Sra. Maria,PED-1003,Caja de refrescos y botanas
-XYZ-789,chofer1@test.com,2026-05-25,RT-004,Farmacia Central,admin4@farmacentral.com,5559876543,Calle Reforma 45,"19.4123,-99.1789",CLI-004,Dr. Torres,PED-1004,Medicamentos termolábiles
+placas_vehiculo,correo_chofer,fecha,codigo_ruta,nombre_cliente,correo_cliente,telefono_cliente,direccion_cliente,latitud_cliente,longitud_cliente,codigo_cliente,contacto_cliente,codigo_pedido,descripcion_pedido
+ABC-123,chofer@gmail.com,2026-05-25,RT-003,Abarrotes La Bendicion,abarrotes@gmail.com,5551234567,Av. Principal 123 Centro,19.4326,-99.1332,CLI-003,Sra. Maria,PED-1003,Caja de refrescos y botanas
+ABC-123,chofer@gmail.com,2026-05-25,RT-003,Carniceria El Toro,carniceria@gmail.com,5552223334,Calle Norte 45,19.4350,-99.1310,CLI-004,Sr. Pepe,PED-1004,Corte de carne 20kg
+ABC-123,chofer@gmail.com,2026-05-25,RT-003,Panaderia El Sol,panaderia@gmail.com,5553334445,Av. Morelos 10,19.4310,-99.1350,CLI-005,Sra. Clara,PED-1005,Bultos de harina y azucar
+XYZ-789,chofer1@test.com,2026-05-25,RT-004,Farmacia Central,farmacia@gmail.com,5559876543,Calle Reforma 45,19.4123,-99.1789,CLI-006,Dr. Torres,PED-1006,Medicamentos termolabiles
+XYZ-789,chofer1@test.com,2026-05-25,RT-004,Clinica San Jose,clinica@gmail.com,5558887776,Calle Sur 12,19.4150,-99.1750,CLI-007,Enf. Laura,PED-1007,Insumos medicos generales
+XYZ-789,chofer1@test.com,2026-05-25,RT-004,Laboratorio Express,lab@gmail.com,5557776665,Av. Juarez 88,19.4100,-99.1810,CLI-008,Quim. Ruiz,PED-1008,Muestras para analisis

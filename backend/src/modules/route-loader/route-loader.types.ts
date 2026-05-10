@@ -8,7 +8,8 @@ export interface NewRouteCSVRow {
   correo_cliente: string;
   telefono_cliente: string;
   direccion_cliente: string;
-  coordenadas_cliente: string; // "lat, lng"
+  latitud_cliente: string;
+  longitud_cliente: string;
   codigo_cliente: string;
   contacto_cliente: string;
   // Datos Pedido

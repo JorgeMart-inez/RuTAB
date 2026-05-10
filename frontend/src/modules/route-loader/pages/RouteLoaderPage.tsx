@@ -1,12 +1,13 @@
 // /src/modules/route-loader/pages/RouteLoaderPage.tsx
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Upload,
   FileText,
   CheckCircle2,
   AlertCircle,
   Info,
+  X,
 } from "lucide-react";
 import { useRouteLoader } from "../hooks/useRouteLoader";
 
@@ -17,6 +18,10 @@ export const RouteLoaderPage = () => {
   const [fileNew, setFileNew] = useState<File | null>(null);
   const [fileFailed, setFileFailed] = useState<File | null>(null);
 
+  // Referencias para limpiar los inputs físicamente
+  const inputNewRef = useRef<HTMLInputElement>(null);
+  const inputFailedRef = useRef<HTMLInputElement>(null);
+
   const handleProcess = async (type: "new" | "failed") => {
     const file = type === "new" ? fileNew : fileFailed;
     const endpoint = type === "new" ? "new-routes" : "failed-orders";
@@ -24,9 +29,18 @@ export const RouteLoaderPage = () => {
     if (file) {
       const success = await uploadFile(file, endpoint);
       if (success) {
-        if (type === "new") setFileNew(null);
-        else setFileFailed(null);
+        clearFile(type);
       }
+    }
+  };
+
+  const clearFile = (type: "new" | "failed") => {
+    if (type === "new") {
+      setFileNew(null);
+      if (inputNewRef.current) inputNewRef.current.value = "";
+    } else {
+      setFileFailed(null);
+      if (inputFailedRef.current) inputFailedRef.current.value = "";
     }
   };
 
@@ -44,7 +58,7 @@ export const RouteLoaderPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* SECCIÓN 1: NUEVAS RUTAS */}
-        <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
               <Upload className="w-5 h-5" />
@@ -55,36 +69,53 @@ export const RouteLoaderPage = () => {
           </div>
 
           <p className="text-sm text-slate-500 mb-6">
-            Usa este panel para crear registros de Rutas, Clientes y Pedidos
-            desde cero. El sistema buscará automáticamente vehículos y choferes
-            por sus placas/correo.
+            Crea registros de Rutas, Clientes y Pedidos. El sistema buscará
+            vehículos y choferes por sus placas/correo.
           </p>
 
-          <label
-            className={`flex-1 border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${fileNew ? "border-green-400 bg-green-50/30" : "border-slate-200 hover:border-blue-400 hover:bg-slate-50"}`}
-          >
-            <input
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={(e) => setFileNew(e.target.files?.[0] || null)}
-            />
-            {fileNew ? (
-              <>
-                <CheckCircle2 className="w-10 h-10 text-green-500 mb-2" />
-                <span className="text-sm font-medium text-green-700">
-                  {fileNew.name}
-                </span>
-              </>
-            ) : (
-              <>
-                <FileText className="w-10 h-10 text-slate-300 mb-2" />
-                <span className="text-sm text-slate-400">
-                  Seleccionar CSV de nuevas rutas
-                </span>
-              </>
+          <div className="relative flex-1 group">
+            <label
+              className={`h-full w-full border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${
+                fileNew
+                  ? "border-green-400 bg-green-50/30"
+                  : "border-slate-200 hover:border-blue-400 hover:bg-slate-50"
+              }`}
+            >
+              <input
+                ref={inputNewRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onClick={(e) => ((e.target as HTMLInputElement).value = "")} // Fix bug mismo archivo
+                onChange={(e) => setFileNew(e.target.files?.[0] || null)}
+              />
+              {fileNew ? (
+                <>
+                  <CheckCircle2 className="w-10 h-10 text-green-500 mb-2" />
+                  <span className="text-sm font-medium text-green-700 text-center break-all px-4">
+                    {fileNew.name}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-10 h-10 text-slate-300 mb-2" />
+                  <span className="text-sm text-slate-400 text-center">
+                    Seleccionar CSV de nuevas rutas
+                  </span>
+                </>
+              )}
+            </label>
+
+            {fileNew && (
+              <button
+                onClick={() => clearFile("new")}
+                className="absolute -top-2 -right-2 p-1 bg-white border border-slate-200 text-slate-400 hover:text-red-500 rounded-full shadow-sm transition-colors"
+                title="Quitar archivo"
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
-          </label>
+          </div>
 
           <button
             onClick={() => handleProcess("new")}
@@ -96,7 +127,7 @@ export const RouteLoaderPage = () => {
         </section>
 
         {/* SECCIÓN 2: PEDIDOS FALLIDOS */}
-        <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col relative">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
               <AlertCircle className="w-5 h-5" />
@@ -111,34 +142,52 @@ export const RouteLoaderPage = () => {
             <span className="font-mono text-xs bg-slate-100 px-1 rounded text-orange-700">
               extraido_fallido
             </span>{" "}
-            para devolverlos a la operación vinculándolos a una nueva ruta.
+            para vincularlos a una nueva ruta.
           </p>
 
-          <label
-            className={`flex-1 border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${fileFailed ? "border-green-400 bg-green-50/30" : "border-slate-200 hover:border-orange-400 hover:bg-slate-50"}`}
-          >
-            <input
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={(e) => setFileFailed(e.target.files?.[0] || null)}
-            />
-            {fileFailed ? (
-              <>
-                <CheckCircle2 className="w-10 h-10 text-green-500 mb-2" />
-                <span className="text-sm font-medium text-green-700">
-                  {fileFailed.name}
-                </span>
-              </>
-            ) : (
-              <>
-                <FileText className="w-10 h-10 text-slate-300 mb-2" />
-                <span className="text-sm text-slate-400">
-                  Seleccionar CSV de re-asignación
-                </span>
-              </>
+          <div className="relative flex-1 group">
+            <label
+              className={`h-full w-full border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${
+                fileFailed
+                  ? "border-green-400 bg-green-50/30"
+                  : "border-slate-200 hover:border-orange-400 hover:bg-slate-50"
+              }`}
+            >
+              <input
+                ref={inputFailedRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onClick={(e) => ((e.target as HTMLInputElement).value = "")} // Fix bug mismo archivo
+                onChange={(e) => setFileFailed(e.target.files?.[0] || null)}
+              />
+              {fileFailed ? (
+                <>
+                  <CheckCircle2 className="w-10 h-10 text-green-500 mb-2" />
+                  <span className="text-sm font-medium text-green-700 text-center break-all px-4">
+                    {fileFailed.name}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-10 h-10 text-slate-300 mb-2" />
+                  <span className="text-sm text-slate-400 text-center">
+                    Seleccionar CSV de re-asignación
+                  </span>
+                </>
+              )}
+            </label>
+
+            {fileFailed && (
+              <button
+                onClick={() => clearFile("failed")}
+                className="absolute -top-2 -right-2 p-1 bg-white border border-slate-200 text-slate-400 hover:text-red-500 rounded-full shadow-sm transition-colors"
+                title="Quitar archivo"
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
-          </label>
+          </div>
 
           <button
             onClick={() => handleProcess("failed")}
@@ -150,15 +199,22 @@ export const RouteLoaderPage = () => {
         </section>
       </div>
 
-      {/* NOTA INFORMATIVA */}
+      {/* NOTA INFORMATIVA ACTUALIZADA */}
       <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3 items-start">
         <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
         <div className="text-xs text-blue-800 leading-relaxed">
           <p className="font-bold mb-1">Información importante:</p>
           <ul className="list-disc ml-4 space-y-1">
             <li>
-              El primer archivo debe contener las coordenadas en formato{" "}
-              <code className="bg-blue-100 px-1 rounded">lat,lng</code>.
+              El archivo de nuevas rutas debe incluir las columnas{" "}
+              <code className="bg-blue-100 px-1 rounded font-bold">
+                latitud_cliente
+              </code>{" "}
+              y{" "}
+              <code className="bg-blue-100 px-1 rounded font-bold">
+                longitud_cliente
+              </code>{" "}
+              por separado.
             </li>
             <li>
               Para la re-asignación, asegúrate de que el código de la ruta ya
@@ -166,7 +222,7 @@ export const RouteLoaderPage = () => {
             </li>
             <li>
               Si ocurre un error en cualquier fila del archivo, se cancelará
-              toda la operación (Transacción Atómica).
+              toda la operación para evitar datos incompletos.
             </li>
           </ul>
         </div>
