@@ -1,5 +1,3 @@
-// src/config/menuConfig.ts
-
 import {
   List,
   Truck,
@@ -14,17 +12,16 @@ import {
   Zap,
   FolderCheck,
   AlertTriangle,
+  FileUp, // Nuevo icono
 } from "lucide-react";
 
-/**
- * Tipado de roles permitidos para el control de acceso en la navegación.
- */
-export type RolPermitido = "superAdmin" | "logístico" | "auditor" | string;
+// Tipado con "string hint" para mantener autocompletado y permitir otros strings
+export type RolPermitido =
+  | "superAdmin"
+  | "logístico"
+  | "auditor"
+  | (string & {});
 
-/**
- * Interfaz para elementos de segundo nivel (Submenús).
- * Requiere estrictamente una ruta y un icono para mantener la consistencia visual.
- */
 export interface SubMenuItem {
   title: string;
   path: string;
@@ -32,10 +29,6 @@ export interface SubMenuItem {
   roles: RolPermitido[];
 }
 
-/**
- * Interfaz para elementos principales del menú.
- * Si contiene 'subItems', el 'path' se vuelve opcional ya que actúa como contenedor.
- */
 export interface MenuItem {
   title: string;
   icon: LucideIcon;
@@ -44,10 +37,6 @@ export interface MenuItem {
   subItems?: SubMenuItem[];
 }
 
-/**
- * Configuración maestra del menú lateral.
- * Define la estructura, iconos y niveles de acceso por rol para toda la aplicación.
- */
 export const menuConfig: MenuItem[] = [
   {
     title: "Inicio",
@@ -56,7 +45,6 @@ export const menuConfig: MenuItem[] = [
     roles: ["superAdmin", "logístico", "auditor"],
   },
   {
-    // Agrupamos todo lo operativo bajo "Operaciones" o "Rutas"
     title: "Rutas y Operaciones",
     icon: Map,
     roles: ["superAdmin", "logístico"],
@@ -64,17 +52,17 @@ export const menuConfig: MenuItem[] = [
       {
         title: "Optimización",
         path: "/panel/optimizacion",
-        icon: Zap, // Zap o Map quedan geniales aquí
+        icon: Zap,
         roles: ["superAdmin", "logístico"],
       },
       {
         title: "Monitoreo en Vivo",
         path: "/panel/monitoreo",
-        icon: Activity, // El pulso de la flota 📈
+        icon: Activity,
         roles: ["superAdmin", "logístico"],
       },
       {
-        title: "Extraer Pedidos Fallidos", // Nuevo módulo
+        title: "Extraer Pedidos Fallidos",
         path: "/panel/operaciones/pedidos-fallidos",
         icon: ShoppingCart,
         roles: ["superAdmin", "logístico"],
@@ -82,7 +70,7 @@ export const menuConfig: MenuItem[] = [
       {
         title: "Cargar Rutas",
         path: "/panel/operaciones/cargar-rutas",
-        icon: Zap, // Puedes usar Upload o Zap
+        icon: FileUp, // Actualizado
         roles: ["superAdmin", "logístico"],
       },
     ],
@@ -107,7 +95,6 @@ export const menuConfig: MenuItem[] = [
     ],
   },
   {
-    // Elemento tipo acordeón: no redirige, expande sus subItems
     title: "Gestión de Datos",
     icon: Database,
     roles: ["superAdmin", "logístico", "auditor"],

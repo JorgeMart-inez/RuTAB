@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { MenuItem } from "../../config/menuConfig";
+import { Tooltip } from "./Tooltip";
 
 interface SidebarItemProps {
   item: MenuItem;
   userRol: string | undefined;
-  isCollapsed: boolean; // Nueva prop
+  isCollapsed: boolean;
 }
 
 const hasPermission = (rolesItem: string[], userRol: string | undefined) => {
@@ -25,7 +26,6 @@ export const SidebarItem = ({
   );
   const [isOpen, setIsOpen] = useState(isChildActive || false);
 
-  // Si se colapsa la barra, cerramos los submenús automáticamente
   useEffect(() => {
     if (isCollapsed) setIsOpen(false);
     else if (isChildActive) setIsOpen(true);
@@ -38,8 +38,6 @@ export const SidebarItem = ({
   if (item.subItems && subItemsPermitidos.length === 0) return null;
 
   const Icon = item.icon;
-
-  // Clases base ajustadas para el estado colapsado
   const baseClasses = `flex items-center gap-3 p-4 rounded-xl transition-all duration-300 font-medium text-sm w-full ${
     isCollapsed ? "justify-center px-0" : ""
   }`;
@@ -47,47 +45,53 @@ export const SidebarItem = ({
   const inactiveClasses =
     "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50";
 
-  // --- CASO 1: Ítem de nivel único ---
-  if (!item.subItems) {
-    return (
-      <NavLink
-        to={item.path!}
-        end={item.path === "/panel/inicio"}
-        className={({ isActive }) =>
-          `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`
-        }
-        title={isCollapsed ? item.title : ""} // Tooltip nativo al estar colapsado
-      >
-        <Icon className="w-5 h-5 shrink-0" />
-        {!isCollapsed && <span className="truncate">{item.title}</span>}
-      </NavLink>
-    );
-  }
-
-  // --- CASO 2: Ítem con submenú ---
-  return (
-    <div className="space-y-1">
-      <button
-        onClick={() => !isCollapsed && setIsOpen(!isOpen)}
-        className={`${baseClasses} ${
-          isChildActive && !isOpen
-            ? "text-neutral-100 bg-neutral-800/50"
-            : inactiveClasses
-        } ${isCollapsed ? "cursor-default" : "cursor-pointer"}`}
-        title={isCollapsed ? item.title : ""}
-      >
-        <Icon className="w-5 h-5 shrink-0" />
-        {!isCollapsed && (
-          <>
-            <span className="flex-1 text-left truncate">{item.title}</span>
+  const renderContent = (isActive: boolean) => (
+    <>
+      <Icon className="w-5 h-5 shrink-0" />
+      {!isCollapsed && (
+        <>
+          <span className="flex-1 text-left truncate">{item.title}</span>
+          {item.subItems && (
             <ChevronDown
               className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
             />
-          </>
-        )}
-      </button>
+          )}
+        </>
+      )}
+    </>
+  );
 
-      {/* Submenús: Solo se muestran si NO está colapsado y está abierto */}
+  if (!item.subItems) {
+    return (
+      <Tooltip text={item.title} enabled={isCollapsed}>
+        <NavLink
+          to={item.path!}
+          end={item.path === "/panel/inicio"}
+          className={({ isActive }) =>
+            `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`
+          }
+        >
+          {({ isActive }) => renderContent(isActive)}
+        </NavLink>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <Tooltip text={item.title} enabled={isCollapsed}>
+        <button
+          onClick={() => !isCollapsed && setIsOpen(!isOpen)}
+          className={`${baseClasses} ${
+            isChildActive && !isOpen
+              ? "text-neutral-100 bg-neutral-800/50"
+              : inactiveClasses
+          } ${isCollapsed ? "cursor-default" : "cursor-pointer"}`}
+        >
+          {renderContent(false)}
+        </button>
+      </Tooltip>
+
       {!isCollapsed && (
         <div
           className={`space-y-1 pl-6 overflow-hidden transition-all duration-300 ease-in-out ${
