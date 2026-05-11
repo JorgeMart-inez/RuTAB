@@ -17,6 +17,7 @@ interface Usuario {
   nombre: string;
   correo: string;
   rol: string;
+  telefono?: string | null;
   foto_perfil_url?: string | null;
 }
 
@@ -34,6 +35,8 @@ interface AuthContextType {
   login: (token: string, usuario: Usuario, tipo: string) => void;
   /** Método para cerrar sesión y limpiar persistencia */
   logout: () => void;
+
+  updateUsuario: (nuevosDatos: Partial<Usuario>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -109,9 +112,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.href = "/login";
   };
 
+  const updateUsuario = (nuevosDatos: Partial<Usuario>) => {
+    setUsuario((prev) => {
+      if (!prev) return null;
+      const usuarioActualizado = { ...prev, ...nuevosDatos };
+      // Persistimos el cambio en LocalStorage para que al recargar se mantenga
+      localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+      return usuarioActualizado;
+    });
+  };
+
   return (
     <AuthContext.Provider
-      value={{ token, usuario, cargandoAuth, login, logout }}
+      value={{ token, usuario, cargandoAuth, login, logout, updateUsuario }}
     >
       {children}
     </AuthContext.Provider>

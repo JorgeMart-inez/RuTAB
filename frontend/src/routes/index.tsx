@@ -68,6 +68,11 @@ const OrdersPage = lazy(() =>
     default: m.OrdersPage,
   })),
 );
+const ProfilePage = lazy(() =>
+  import("../modules/profile/pages/ProfilePage").then((m) => ({
+    default: m.ProfilePage,
+  })),
+);
 
 export const AppRoutes = () => {
   const { token } = useAuth();
@@ -205,6 +210,15 @@ export const AppRoutes = () => {
             }
           />
         </Route>
+
+        <Route
+          path="perfil"
+          element={
+            <RoleGuard allowedRoles={["superAdmin", "logístico", "auditor"]}>
+              <ProfilePage />
+            </RoleGuard>
+          }
+        />
       </Route>
 
       <Route

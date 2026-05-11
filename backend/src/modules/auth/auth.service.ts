@@ -61,6 +61,7 @@ export class AuthService {
           id: admin.id,
           nombre: admin.nombre,
           correo: admin.correo,
+          telefono: admin.telefono,
           rol: admin.rol,
           foto_perfil_url: fotoFirmada,
         },
@@ -125,6 +126,7 @@ export class AuthService {
         id: admin.id,
         nombre: admin.nombre,
         correo: admin.correo,
+        telefono: admin.telefono,
         rol: admin.rol,
         foto_perfil_url: fotoFirmada,
       };

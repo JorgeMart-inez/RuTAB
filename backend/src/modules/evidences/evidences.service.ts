@@ -14,7 +14,6 @@ export class EvidencesService {
   private supabase;
 
   constructor(private prisma: PrismaService) {
-    console.log('URL:', process.env.SUPABASE_URL);
 
     this.supabase = createClient(
       process.env.SUPABASE_URL,

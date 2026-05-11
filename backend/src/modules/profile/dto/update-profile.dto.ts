@@ -1,8 +1,16 @@
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MinLength,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'El nombre debe ser un texto' })
+  @IsNotEmpty({ message: 'El nombre no puede estar vacío' }) // Evita ""
+  @MinLength(3, { message: 'El nombre es demasiado corto' })
   nombre?: string;
 
   @IsOptional()

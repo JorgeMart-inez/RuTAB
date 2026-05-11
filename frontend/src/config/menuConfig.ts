@@ -125,4 +125,10 @@ export const menuConfig: MenuItem[] = [
       },
     ],
   },
+  {
+    title: "Mi Cuenta",
+    path: "/panel/perfil",
+    icon: UserRound, // Ya lo tienes importado en tu archivo
+    roles: ["superAdmin", "logístico", "auditor"],
+  },
 ];
