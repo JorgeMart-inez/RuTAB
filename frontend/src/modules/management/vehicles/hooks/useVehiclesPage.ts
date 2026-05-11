@@ -94,6 +94,8 @@ export const useVehiclesPage = () => {
     } catch (error: any) {
       // El mensaje de error es procesado por el interceptor global de Axios
       toast.error(error.message || "Error al eliminar la unidad");
+    } finally {
+      // --- FIX: Reseteo de estado garantizado ---
       setIsDeleting(false);
     }
   };
