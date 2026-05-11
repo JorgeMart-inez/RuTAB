@@ -21,6 +21,7 @@ import { IncidentsModule } from 'src/modules/incidents/incidents.module';
 import { DashboardModule } from './src/modules/dashboard/dashboard.module';
 import { FailedDeliveriesModule } from 'src/modules/failed-deliveries/failed-deliveries.module';
 import { RouteLoaderModule } from 'src/modules/route-loader/route-loader.module';
+import { ProfileModule } from 'src/modules/profile/profile.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { RouteLoaderModule } from 'src/modules/route-loader/route-loader.module'
     DashboardModule,
     FailedDeliveriesModule,
     RouteLoaderModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [

@@ -5,6 +5,7 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
+import { ProfileService } from '../profile/profile.service';
 
 /**
  * Servicio de lógica de negocio para la autenticación.
@@ -15,6 +16,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private profileService: ProfileService,
   ) {}
 
   /**
@@ -42,6 +44,10 @@ export class AuthService {
         throw new UnauthorizedException('Credenciales incorrectas');
       }
 
+      const fotoFirmada = await this.profileService.getSignedAvatar(
+        admin.foto_perfil_url,
+      );
+
       /**
        * Generación del Payload del JWT:
        * 'sub' (Subject) guarda el ID único del usuario para futuras consultas.
@@ -56,7 +62,7 @@ export class AuthService {
           nombre: admin.nombre,
           correo: admin.correo,
           rol: admin.rol,
-          foto_perfil_url: admin.foto_perfil_url,
+          foto_perfil_url: fotoFirmada,
         },
       };
     }
@@ -111,12 +117,16 @@ export class AuthService {
 
       if (!admin) throw new UnauthorizedException('Usuario no encontrado');
 
+      const fotoFirmada = await this.profileService.getSignedAvatar(
+        admin.foto_perfil_url,
+      );
+
       return {
         id: admin.id,
         nombre: admin.nombre,
         correo: admin.correo,
         rol: admin.rol,
-        foto_perfil_url: admin.foto_perfil_url,
+        foto_perfil_url: fotoFirmada,
       };
     }
 

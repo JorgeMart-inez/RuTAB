@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from '../jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ProfileModule } from '../profile/profile.module';
 
 /**
  * Módulo de Autenticación.
@@ -32,6 +33,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: { expiresIn: '7d' },
       }),
     }),
+    ProfileModule,
   ],
   controllers: [AuthController],
   /**
