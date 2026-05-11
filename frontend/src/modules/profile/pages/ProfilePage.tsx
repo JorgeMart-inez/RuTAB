@@ -3,7 +3,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { profileService } from "../services/profileService";
 import { User, Mail, Phone, Lock, Camera, Save, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { ImageCropperModal } from "../components/ImageCropperModal";
+import { ImageCropperModal } from "../../../components/ui/ImageCropperModal";
 
 export const ProfilePage = () => {
   const { usuario, updateUsuario } = useAuth();
@@ -11,7 +11,9 @@ export const ProfilePage = () => {
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedImageStr, setSelectedImageStr] = useState<string | null>(null);
+
+  // --- CAMBIO: Ahora guardamos el File crudo, no el string base64 ---
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     nombre: usuario?.nombre || "",
@@ -20,18 +22,13 @@ export const ProfilePage = () => {
     password: "",
   });
 
-  // --- FUNCIÓN DE UTILIDAD PARA EXTRAER ERRORES ---
   const handleApiError = (error: any, defaultMsg: string) => {
     const backendMessage = error.response?.data?.message;
-
     if (Array.isArray(backendMessage)) {
-      // Si NestJS devuelve varios errores de validación, mostramos el primero
       toast.error(backendMessage[0]);
     } else if (typeof backendMessage === "string") {
-      // Si es un error único de base de datos o lógica
       toast.error(backendMessage);
     } else {
-      // Error genérico si no hay respuesta del servidor
       toast.error(defaultMsg);
     }
   };
@@ -45,19 +42,13 @@ export const ProfilePage = () => {
     setLoading(true);
 
     try {
-      // --- MEJORA: Limpieza estricta de datos ---
       const updateData: any = {};
-
-      // Solo agregamos al envío si tienen contenido real (sin espacios vacíos)
       if (formData.nombre.trim()) updateData.nombre = formData.nombre.trim();
       if (formData.telefono?.trim())
         updateData.telefono = formData.telefono.trim();
       if (formData.correo.trim()) updateData.correo = formData.correo.trim();
-
-      // La contraseña solo se envía si el usuario escribió algo
       if (formData.password) updateData.password = formData.password;
 
-      // Validación local previa para el nombre (opcional pero recomendada)
       if (!updateData.nombre) {
         toast.error("El nombre es obligatorio");
         setLoading(false);
@@ -75,6 +66,7 @@ export const ProfilePage = () => {
     }
   };
 
+  // --- MEJORA: handleFileChange mucho más limpio ---
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -85,15 +77,15 @@ export const ProfilePage = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => setSelectedImageStr(reader.result as string);
-    reader.readAsDataURL(file);
+    // Simplemente guardamos el archivo y el modal se abre
+    setSelectedImageFile(file);
 
+    // Limpiamos el input para que permita subir la misma foto si se cancela
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCropComplete = async (croppedFile: File) => {
-    setSelectedImageStr(null);
+    setSelectedImageFile(null); // Cerramos el modal
     setUploading(true);
     const toastId = toast.loading("Subiendo avatar optimizado...");
 
@@ -104,7 +96,7 @@ export const ProfilePage = () => {
       toast.success("Foto de perfil actualizada", { id: toastId });
     } catch (error: any) {
       handleApiError(error, "Error al subir la imagen");
-      toast.dismiss(toastId); // Quitamos el loading manual en caso de error
+      toast.dismiss(toastId);
     } finally {
       setUploading(false);
     }
@@ -112,11 +104,14 @@ export const ProfilePage = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {selectedImageStr && (
+      {/* --- MODAL ACTUALIZADO --- */}
+      {selectedImageFile && (
         <ImageCropperModal
-          imageSrc={selectedImageStr}
-          onClose={() => setSelectedImageStr(null)}
+          isOpen={!!selectedImageFile}
+          imageFile={selectedImageFile}
+          onClose={() => setSelectedImageFile(null)}
           onCropComplete={handleCropComplete}
+          aspectRatio={1}
         />
       )}
 
@@ -128,7 +123,6 @@ export const ProfilePage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Columna Izquierda: Avatar */}
         <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="relative group">
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-50 bg-gray-100 flex items-center justify-center">
@@ -158,7 +152,7 @@ export const ProfilePage = () => {
               ref={fileInputRef}
               onChange={handleFileChange}
               className="hidden"
-              accept="image/*"
+              accept="image/png, image/jpeg, image/webp"
             />
           </div>
           <div className="text-center">
@@ -169,12 +163,12 @@ export const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Columna Derecha: Formulario */}
         <div className="md:col-span-2 space-y-6">
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100"
           >
+            {/* ... Resto del formulario igual ... */}
             <div className="p-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
                 <User size={20} className="text-blue-500" /> Información
@@ -194,7 +188,7 @@ export const ProfilePage = () => {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -211,7 +205,7 @@ export const ProfilePage = () => {
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
                 </div>
@@ -229,7 +223,7 @@ export const ProfilePage = () => {
                       type="email"
                       value={formData.correo}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
                 </div>
@@ -254,13 +248,10 @@ export const ProfilePage = () => {
                     type="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder="Dejar en blanco para mantener actual"
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-1 italic">
-                  Mínimo 6 caracteres.
-                </p>
               </div>
             </div>
 
@@ -268,7 +259,7 @@ export const ProfilePage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg disabled:bg-blue-300"
+                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md disabled:bg-blue-300"
               >
                 {loading ? (
                   <Loader2 className="animate-spin" size={20} />
