@@ -128,22 +128,6 @@ export class DriversService {
       delete dataToUpdate.password;
     }
 
-    if (data.correo && data.correo !== existe.correo) {
-      const correoExistente = await this.prisma.choferes.findUnique({
-        where: { correo: data.correo },
-      });
-      if (correoExistente) {
-        throw new ConflictException('Este correo electrónico ya está registrado');
-      }
-    }
-
-    const updateData: Partial<CreateDriverDto> = { ...data };
-
-    if (updateData.password) {
-      const saltRounds = 10;
-      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
-    }
-
     return this.prisma.choferes.update({
       where: { id },
       data: dataToUpdate,
