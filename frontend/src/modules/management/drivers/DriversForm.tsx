@@ -103,7 +103,7 @@ export const DriversForm: React.FC<DriverProps> = ({
                 className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.password}
                 onChange={(e) => handleChange("password", e.target.value)}
-                placeholder={driver ? "Dejar en blanco..." : "*******"}
+                placeholder={driver ? "*******" : "*******"}
                 disabled={isLoading}
               />
             </div>

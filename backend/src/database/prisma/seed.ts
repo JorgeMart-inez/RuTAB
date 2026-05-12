@@ -15,8 +15,8 @@ const prisma = new PrismaClient();
  */
 async function main() {
   // Configuración de credenciales de prueba
-  const nombre = 'Joji Dev';
-  const correo = 'joji@gmail.com';
+  const nombre = 'RuTAB_Admin';
+  const correo = 'admin@rutab.com';
   const passwordPlana = '1234';
   const rol = 'superAdmin';
 

@@ -3,6 +3,15 @@ import { PrismaService } from 'src/database/prisma/prisma.service';
 import { CreateDriverDto } from './dto/create-drivers.dto';
 import * as bcrypt from 'bcrypt'; // instalar bcrypt con npm install bcrypt && npm install -D @types/bcrypt
 
+const DRIVER_SELECT = {
+  id: true,
+  nombre: true,
+  licencia: true,
+  correo: true,
+  telefono: true,
+  foto_perfil_url: true,
+};
+
 @Injectable()
 export class DriversService {
   constructor(private prisma: PrismaService) {}
@@ -18,38 +27,57 @@ export class DriversService {
       throw new ConflictException('Este correo electrónico ya está registrado');
     }
 
-    // Encriptar la contraseña usando bcrypt
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Crear el chofer con la contraseña hasheada
     return this.prisma.choferes.create({
       data: {
         ...rest,
         correo,
         password: hashedPassword,
       },
+      select: DRIVER_SELECT,
     });
   }
 
-  async findAll(){
-    return this.prisma.choferes.findMany();
+  async findAll() {
+    return this.prisma.choferes.findMany({ select: DRIVER_SELECT });
   }
 
   async findOne(id: string) {
-    const drivers = await this.prisma.choferes.findUnique({ where: { id } });
-    if (!drivers) throw new NotFoundException('Chofer no encontrado.');
+    const driver = await this.prisma.choferes.findUnique({
+      where: { id },
+      select: DRIVER_SELECT,
+    });
+    if (!driver) throw new NotFoundException('Chofer no encontrado.');
 
-    return drivers;
+    return driver;
   }
 
-  async update(id: string, data: Partial <CreateDriverDto>){
-    const existe = await this.prisma.choferes.findUnique({ where: { id }});
+  async update(id: string, data: Partial<CreateDriverDto>) {
+    const existe = await this.prisma.choferes.findUnique({ where: { id } });
     if (!existe) throw new NotFoundException('Chofer no encontrado.');
+
+    if (data.correo && data.correo !== existe.correo) {
+      const correoExistente = await this.prisma.choferes.findUnique({
+        where: { correo: data.correo },
+      });
+      if (correoExistente) {
+        throw new ConflictException('Este correo electrónico ya está registrado');
+      }
+    }
+
+    const updateData: Partial<CreateDriverDto> = { ...data };
+
+    if (updateData.password) {
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+    }
 
     return this.prisma.choferes.update({
       where: { id },
-      data,
+      data: updateData,
+      select: DRIVER_SELECT,
     });
   }
 
