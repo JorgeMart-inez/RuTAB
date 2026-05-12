@@ -38,17 +38,18 @@ export class DashboardService {
         pedidosStats.find((p) => p.estado_pedido === 'cancelado')?._count || 0,
       fallidos:
         pedidosStats.find((p) => p.estado_pedido === 'fallido')?._count || 0,
+      enTransito:
+        pedidosStats.find((p) => p.estado_pedido === 'en_transito')?._count || 0,
     };
 
     return {
       rutasActivas: rutasActivas || 0,
       pedidos: {
-        ...counts,
-        enRuta: Math.max(
-          0,
-          counts.totales -
-            (counts.entregados + counts.cancelados + counts.fallidos),
-        ),
+        totales: counts.totales,
+        entregados: counts.entregados,
+        cancelados: counts.cancelados,
+        fallidos: counts.fallidos,
+        enRuta: counts.enTransito,
       },
       incidenciasHoy: rawIncidencias.length || 0,
       monitorIncidencias: {

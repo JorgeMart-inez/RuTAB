@@ -22,14 +22,6 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={exportDashboardPDF}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
-          >
-            <FileText size={16} className="text-red-500" />
-            Exportar PDF
-          </button>
-
           {/* Dejamos el espacio para el CSV que mencionaste */}
           <button
             onClick={() => exportDashboardCSV(stats)}

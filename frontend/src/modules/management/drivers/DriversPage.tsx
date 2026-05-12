@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { DriversForm } from "./DriversForm";
 import { useDriverPage } from "./hooks/useDriversPage";
 import { ConfirmModal } from "../../../components/ui/ConfirmModal";
@@ -30,6 +30,24 @@ export const DriversPage: React.FC = () => {
     executeDelete,
   } = useDriverPage();
 
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredDrivers = useMemo(
+    () => {
+      const normalizedTerm = searchTerm.trim().toLowerCase();
+      if (!normalizedTerm) return drivers;
+
+      return drivers.filter((driver) => {
+        const matchesName = driver.nombre.toLowerCase().includes(normalizedTerm);
+        const matchesEmail = driver.correo.toLowerCase().includes(normalizedTerm);
+        const matchesId = driver.id.toLowerCase().includes(normalizedTerm);
+
+        return matchesName || matchesEmail || matchesId;
+      });
+    },
+    [drivers, searchTerm],
+  );
+
   return (
     <div className="p-4 lg:p-8 bg-gray-50 min-h-screen">
       {/* Header: Acción principal y Título */}
@@ -48,11 +66,13 @@ export const DriversPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Buscador (estilo propuesto en tu diseño) */}
+      {/* Buscador  */}
       <div className="relative mb-8">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
         <input 
           type="text" 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar por nombre, ID o email..."
           className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
         />
@@ -65,7 +85,7 @@ export const DriversPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {drivers.map((d) => (
+          {filteredDrivers.map((d) => (
             <div
               key={d.id}
               className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"

@@ -9,6 +9,15 @@ import { CreateDriverDto } from './dto/create-drivers.dto';
 import * as bcrypt from 'bcrypt';
 import { createClient } from '@supabase/supabase-js';
 
+const DRIVER_SELECT = {
+  id: true,
+  nombre: true,
+  licencia: true,
+  correo: true,
+  telefono: true,
+  foto_perfil_url: true,
+};
+
 @Injectable()
 export class DriversService {
   private supabase;
@@ -80,6 +89,7 @@ export class DriversService {
         correo,
         password: hashedPassword,
       },
+      select: DRIVER_SELECT,
     });
   }
 
@@ -116,6 +126,22 @@ export class DriversService {
       dataToUpdate.password = await bcrypt.hash(updateDto.password, saltRounds);
     } else {
       delete dataToUpdate.password;
+    }
+
+    if (data.correo && data.correo !== existe.correo) {
+      const correoExistente = await this.prisma.choferes.findUnique({
+        where: { correo: data.correo },
+      });
+      if (correoExistente) {
+        throw new ConflictException('Este correo electrónico ya está registrado');
+      }
+    }
+
+    const updateData: Partial<CreateDriverDto> = { ...data };
+
+    if (updateData.password) {
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
     }
 
     return this.prisma.choferes.update({
