@@ -21,22 +21,19 @@ export class DashboardController {
     return await this.dashboardService.getActiveOperations();
   }
 
- @Get('export/pdf')
-async exportPDF(@Res() res: Response) {
-    const data = await this.dashboardService.getDailyStats();
-
-    // VALIDACIÓN: Si no hay rutas ni pedidos, avisamos al usuario
-    if (data.rutasActivas === 0 && data.pedidos.totales === 0) {
-        throw new BadRequestException('No hay actividad registrada el día de hoy para generar un reporte.');
-    }
-
-    const pdfBuffer = await this.reportService.generateDailyPDF(data);
-    
-    res.set({
+  @Get('export/pdf')
+  async exportPDF(@Res() res: Response) {
+    try {
+      // Definimos los headers para que el navegador sepa que es un PDF
+      res.set({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename=reporte-rutab.pdf',
-    });
-    
-    res.end(pdfBuffer);
-}
+        'Content-Disposition': 'attachment; filename=reporte_rutab.pdf',
+      });
+
+      await this.reportService.generateDailyPDF(res);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+      res.status(500).send('Error interno al generar el reporte');
+    }
+  }
 }

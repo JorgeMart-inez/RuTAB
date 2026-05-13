@@ -31,12 +31,18 @@ export class DashboardGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   @SubscribeMessage('getInitialData')
   async handleInitialData(client: Socket) {
-    const stats = await this.dashboardService.getDailyStats();
-    const operacion = await this.dashboardService.getActiveOperations();
+    const [stats, operacion, weekly, topData] = await Promise.all([
+      this.dashboardService.getDailyStats(),
+      this.dashboardService.getActiveOperations(),
+      this.dashboardService.getWeeklyStats(),
+      this.dashboardService.getTopPerformers(),
+    ]);
 
     client.emit('dashboard:initialData', {
       stats,
-      operacion
+      operacion,
+      weekly,
+      topData,
     });
 
     await this.emitDashboardUpdate();
@@ -74,19 +80,23 @@ export class DashboardGateway implements OnGatewayConnection, OnGatewayDisconnec
       }
     });
 
-    // Clasificación de stats usando los nombres de campo correctos
-    const stats = {
-      urgentes: incidencias.filter(i => i.estado_incidencia === 'urgente').length,
-      fallidos: incidencias.filter(i => i.categoria === 'entrega' || i.categoria === 'tiempo').length,
-      alertasCriticas: incidencias.filter(i => i.categoria === 'camino').length,
-      ...(await this.dashboardService.getDailyStats()),
-    };
-
-    const operacion = await this.dashboardService.getActiveOperations();
+    const [stats, operacion, weekly, topData] = await Promise.all([
+      this.dashboardService.getDailyStats(),
+      this.dashboardService.getActiveOperations(),
+      this.dashboardService.getWeeklyStats(),
+      this.dashboardService.getTopPerformers(),
+    ]);
 
     this.server.emit('dashboard:update', {
-      stats,
+      stats: {
+        urgentes: incidencias.filter(i => i.estado_incidencia === 'urgente').length,
+        fallidos: incidencias.filter(i => i.categoria === 'entrega' || i.categoria === 'tiempo').length,
+        alertasCriticas: incidencias.filter(i => i.categoria === 'camino').length,
+        ...stats,
+      },
       operacion,
+      weekly,
+      topData,
       rawIncidencias: incidencias, // Enviamos las incidencias sin procesar para que el frontend las clasifique
       timestamp: new Date(),
     });
@@ -117,11 +127,17 @@ export class DashboardGateway implements OnGatewayConnection, OnGatewayDisconnec
       ...(await this.dashboardService.getDailyStats()),
     };
 
-    const operacion = await this.dashboardService.getActiveOperations();
+    const [operacion, weekly, topData] = await Promise.all([
+      this.dashboardService.getActiveOperations(),
+      this.dashboardService.getWeeklyStats(),
+      this.dashboardService.getTopPerformers()
+    ]);
 
     this.server.emit('dashboard:update', {
       stats,
       operacion,
+      weekly,
+      topData,
       rawIncidencias: incidencias,
       timestamp: new Date(),
     });

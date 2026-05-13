@@ -182,6 +182,23 @@ CREATE TABLE public.incidencias (
 );
 CREATE INDEX idx_incidencias_coordenadas ON public.incidencias USING GIST (coordenadas_incidente);
 
+-- =========================
+-- REPORTES
+-- =========================
+CREATE TABLE IF NOT EXISTS public.reportes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    types VARCHAR(50) NOT NULL, -- 'WEEKLY', 'MONTHLY', etc.
+    startDate TIMESTAMP NOT NULL,
+    endDate TIMESTAMP NOT NULL,
+    fileUrl TEXT NOT NULL,
+    createdById TEXT NOT NULL, -- ID del usuario que lo generó
+    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Comentario de auditoría para la tabla
+COMMENT ON TABLE public.reportes IS 'Tabla para el seguimiento y auditoría de reportes generados en el sistema RuTAB';
+
 
 -- Función que revisa si todos los pedidos de una ruta están "entregados"
 -- CREATE OR REPLACE FUNCTION actualizar_estatus_ruta()

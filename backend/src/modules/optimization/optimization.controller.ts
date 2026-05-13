@@ -88,7 +88,7 @@ export class OptimizacionController {
    * Permite filtrar los resultados por texto (placa/ID) o por una fecha específica.
    */
   @Get('pending-routes')
-  @Roles('superAdmin', 'logístico')
+  @Roles('superAdmin', 'logístico', 'auditor')
   async obtenerRutasPendientes(
     @Query('busqueda') busqueda?: string,
     @Query('fecha') fecha?: string,

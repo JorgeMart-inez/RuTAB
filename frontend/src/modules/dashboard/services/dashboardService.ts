@@ -27,35 +27,57 @@ export const exportDashboardPDF = async () => {
 };
 
 export const exportDashboardCSV = (stats: any) => {
-  if (!stats || (stats.rutasActivas === 0 && stats.pedidos.totales === 0)) {
-    alert("⚠️ Aviso de RuTAB: No hay datos para exportar a CSV.");
-    return;
-  }
+  if (!stats) return alert("⚠️ No hay datos para exportar.");
 
-  // Definimos las columnas y los datos
-  const headers = ["Categoria", "Valor"];
-  const rows = [
-    ["Rutas Activas", stats.rutasActivas],
-    ["Total Pedidos", stats.pedidos.totales],
-    ["Entregados", stats.pedidos.entregados],
-    ["Fallidos", stats.pedidos.fallidos],
-    ["En Ruta", stats.pedidos.enRuta],
-    ["Incidencias Totales", stats.incidenciasHoy],
-    ["Fecha Reporte", new Date().toLocaleString()]
+  const fileName = `Reporte_Operativo_RuTAB_${new Date().toISOString().split('T')[0]}`;
+  
+  // 1. Encabezado de Empresa
+  let csvContent = "REPORTE OPERATIVO DIARIO - RuTAB\n";
+  csvContent += `Empresa: TabsCorp\n`;
+  csvContent += `Administrador: Jorge Gabriel Martinez\n`;
+  csvContent += `Fecha de generacion: ${new Date().toLocaleString()}\n`;
+  csvContent += "\n"; // Espacio en blanco
+
+  // 2. Seccion: KPIs de Resumen
+  csvContent += "--- RESUMEN DE OPERACION ---\n";
+  csvContent += "Metrica,Valor\n";
+  csvContent += `Rutas Activas,${stats.rutasActivas}\n`;
+  csvContent += `Total Pedidos,${stats.pedidos.totales}\n`;
+  csvContent += `Eficiencia de Entrega,${((stats.pedidos.entregados / stats.pedidos.totales) * 100).toFixed(2)}%\n`;
+  csvContent += "\n";
+
+  // 3. Seccion: Detalle de Pedidos
+  csvContent += "--- DETALLE DE PEDIDOS ---\n";
+  csvContent += "Estado,Cantidad\n";
+  csvContent += `Entregados,${stats.pedidos.entregados}\n`;
+  csvContent += `En Ruta,${stats.pedidos.enRuta}\n`;
+  csvContent += `Fallidos/Cancelados,${stats.pedidos.fallidos + (stats.pedidos.cancelados || 0)}\n`;
+  csvContent += "\n";
+
+  // 4. Seccion: Monitor de Incidencias (Lo que corregimos con scroll)
+  csvContent += "--- BITACORA DE INCIDENCIAS ---\n";
+  csvContent += "Categoria,Descripcion,Unidad,Hora\n";
+  
+  const todasLasIncidencias = [
+    ...(stats.monitorIncidencias?.camino || []),
+    ...(stats.monitorIncidencias?.entrega || []),
+    ...(stats.monitorIncidencias?.tiempo || [])
   ];
 
-  // Construimos el contenido CSV
-  const csvContent = [
-    headers.join(","),
-    ...rows.map(e => e.join(","))
-  ].join("\n");
+  if (todasLasIncidencias.length > 0) {
+    todasLasIncidencias.forEach(inc => {
+      csvContent += `${inc.categoria.toUpperCase()},"${inc.descripcion}",${inc.rutas?.vehiculos?.placas || 'N/A'},${new Date(inc.created_at).toLocaleTimeString()}\n`;
+    });
+  } else {
+    csvContent += "N/A,Sin incidencias registradas hoy,N/A,N/A\n";
+  }
 
-  // Crear y descargar el archivo
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Creación del archivo con BOM para que Excel reconozca los acentos (UTF-8)
+  const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `Reporte_RuTAB_${new Date().toLocaleDateString()}.csv`);
+  link.setAttribute("download", `${fileName}.csv`);
   document.body.appendChild(link);
   link.click();
   link.remove();

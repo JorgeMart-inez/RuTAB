@@ -41,7 +41,7 @@ model clientes {
   codigo      String?
   contacto    String?
   estatus     String?                  @default("Activo")
-  created_at  DateTime                 @default(now()) @db.Timestamptz(6)
+  created_at  DateTime                 @default(now()) @db.Timestamp(6)
   pedidos     pedidos[]
 }
 
@@ -51,7 +51,7 @@ model detalles_ruta {
   pedido_id      String?  @db.Uuid
   orden_entrega  Int?
   comentarios    String?
-  estado_intento String?  @default("pendiente")
+  estado_intento String   @default("pendiente")
   pedidos        pedidos? @relation(fields: [pedido_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   rutas          rutas?   @relation(fields: [ruta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -77,8 +77,8 @@ model incidencias {
   coordenadas_incidente Unsupported("geography")?
   estado_incidencia     String?                   @default("pendiente")
   categoria             String                    @default("camino")
-  created_at            DateTime                  @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime                  @default(now()) @db.Timestamptz(6)
+  created_at            DateTime                  @default(now()) @db.Timestamp(6)
+  updated_at            DateTime                  @default(now()) @db.Timestamp(6)
   pedidos               pedidos?                  @relation(fields: [pedido_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   rutas                 rutas?                    @relation(fields: [ruta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -89,10 +89,10 @@ model pedidos {
   id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   cliente_id        String?         @db.Uuid
   descripcion_carga String?
-  codigo_rastreo    String          @unique
+  codigo_rastreo    String
   estado_pedido     String?         @default("pendiente")
-  created_at        DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
+  created_at        DateTime        @default(now()) @db.Timestamp(6)
+  updated_at        DateTime        @default(now()) @db.Timestamp(6)
   detalles_ruta     detalles_ruta[]
   evidencias        evidencias[]
   incidencias       incidencias[]
@@ -104,13 +104,13 @@ model rutas {
   vehiculo_id              String?                @db.Uuid
   chofer_id                String?                @db.Uuid
   creado_por               String?                @db.Uuid
-  codigo_rastreo           String                 @unique
   fecha_programada         DateTime?              @db.Date
   distancia_total_estimada Decimal?               @db.Decimal
   tiempo_estimado_entrega  DateTime?              @db.Timestamptz(6)
   estatus_ruta             String?                @default("borrador")
-  created_at               DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at               DateTime               @default(now()) @db.Timestamptz(6)
+  created_at               DateTime               @default(now()) @db.Timestamp(6)
+  updated_at               DateTime               @default(now()) @db.Timestamp(6)
+  codigo_rastreo           String                 @unique
   detalles_ruta            detalles_ruta[]
   incidencias              incidencias[]
   choferes                 choferes?              @relation(fields: [chofer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -161,4 +161,15 @@ model ubicacion_actual {
   rutas               rutas                    @relation(fields: [ruta_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ruta_actual")
 
   @@index([ultima_coordenada], map: "idx_ubicacion_actual_geog", type: Gist)
+}
+
+model reportes {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String   @db.VarChar(255)
+  periods     String   @db.VarChar(50)
+  startdate   DateTime @db.Timestamp(6)
+  enddate     DateTime @db.Timestamp(6)
+  fileurl     String
+  createdbyid String
+  createdat   DateTime @default(now()) @db.Timestamp(6)
 }

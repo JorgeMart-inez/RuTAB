@@ -13,6 +13,7 @@ import {
   FolderCheck,
   AlertTriangle,
   FileUp, // Nuevo icono
+  FileText,
 } from "lucide-react";
 
 // Tipado con "string hint" para mantener autocompletado y permitir otros strings
@@ -78,8 +79,14 @@ export const menuConfig: MenuItem[] = [
   {
     title: "Auditoría",
     icon: ShieldCheck,
-    roles: ["superAdmin", "auditor"],
+    roles: ["superAdmin", "auditor", "logístico"],
     subItems: [
+      {
+        title: "Rutas",
+        path: "/panel/auditoria/rutas",
+        icon: Map,
+        roles: ["superAdmin", "auditor"],
+      },
       {
         title: "Evidencias",
         path: "/panel/auditoria/evidencias",
@@ -90,6 +97,12 @@ export const menuConfig: MenuItem[] = [
         title: "Incidencias",
         path: "/panel/auditoria/incidencias",
         icon: AlertTriangle,
+        roles: ["superAdmin", "auditor", "logístico"],
+      },
+      {
+        title: "Reportes",
+        path: "/panel/auditoria/reportes",
+        icon: FileText,
         roles: ["superAdmin", "auditor", "logístico"],
       },
     ],
