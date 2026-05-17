@@ -96,7 +96,7 @@ export class RouteLoaderService {
           }
 
           // --- VALIDACIÓN DE PEDIDO EXISTENTE EN BD ---
-          const pedidoExistente = await tx.pedidos.findFirst({
+          const pedidoExistente = await tx.pedidos.findUnique({
             where: { codigo_rastreo: row.codigo_pedido },
           });
 
