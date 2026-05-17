@@ -1,5 +1,3 @@
-// src/modules/vehicles/dto/create-vehicle.dto.ts
-
 import {
   IsString,
   IsNotEmpty,
@@ -7,17 +5,9 @@ import {
   IsNumber,
   Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
-/**
- * Objeto de Transferencia de Datos (DTO) para la creación de vehículos.
- * Define las reglas de validación que el motor de NestJS aplicará antes de
- * permitir que los datos lleguen al servicio de base de datos.
- */
 export class CreateVehicleDto {
-  /** * Identificador oficial de la unidad (Placas).
-   * * Validación: Debe cumplir con el formato estándar (ej. ABC-123-A).
-   * * RegEx: Tres letras mayúsculas, guion, tres números, guion y una letra mayúscula.
-   */
   @IsString()
   @IsNotEmpty({ message: 'Las placas son obligatorias' })
   @Matches(/^[A-Z]{3}-[0-9]{3}-[A-Z]{1}$/, {
@@ -25,32 +15,32 @@ export class CreateVehicleDto {
   })
   placas: string;
 
-  /** Fabricante del vehículo (opcional durante el registro inicial) */
   @IsString()
   @IsOptional()
   marca?: string;
 
-  /** Modelo o línea comercial del vehículo */
   @IsString()
   @IsOptional()
   modelo?: string;
 
-  /** * Eficiencia de consumo (km/L).
-   * Validado como valor numérico para permitir cálculos logísticos en el backend.
-   */
-  @IsNumber()
+  @Transform(({ value }) => (value ? parseFloat(value) : undefined))
+  @IsNumber({}, { message: 'El rendimiento debe ser un número válido' })
   @IsOptional()
   rendimiento_combustible?: number;
 
-  /** * Estado operativo de la unidad.
-   * Por defecto suele ser 'disponible' si no se especifica.
-   */
   @IsString()
   @IsOptional()
   estatus?: string;
 
-  /** URL o referencia a la imagen de la unidad almacenada en el servidor de archivos */
   @IsString()
   @IsOptional()
   foto_unidad_url?: string;
+
+  // ─── AGREGA ESTA LÍNEA PARA BLINDAR EL MULTIPART/FORMDATA ───
+  /**
+   * Permite que el rastro del archivo binario del FormData pase la validación
+   * estricta de NestJS sin arrojar "should not exist".
+   */
+  @IsOptional()
+  foto_unidad?: any;
 }

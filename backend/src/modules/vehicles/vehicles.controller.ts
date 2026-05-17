@@ -1,5 +1,3 @@
-// src/modules/vehicles/vehicles.controller.ts
-
 import {
   Controller,
   Get,
@@ -8,66 +6,55 @@ import {
   Param,
   Delete,
   Patch,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 
-/**
- * Controlador de Gestión de Vehículos.
- * Provee la interfaz REST para el mantenimiento de la flota (CRUD).
- * Prefijo de ruta: /vehicles
- */
 @Controller('vehicles')
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
   /**
-   * Endpoint de Creación.
-   * * Acceso restringido: Solo perfiles con atribuciones de gestión operativa.
+   * Endpoint de Creación con soporte para archivos binarios.
    */
   @Post()
   @Roles('superAdmin', 'logístico')
-  create(@Body() createVehiculoDto: CreateVehicleDto) {
-    return this.vehiclesService.create(createVehiculoDto);
+  @UseInterceptors(FileInterceptor('foto_unidad'))
+  create(
+    @Body() createVehiculoDto: CreateVehicleDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.vehiclesService.create(createVehiculoDto, file);
   }
 
-  /**
-   * Endpoint de Consulta Global.
-   * * Acceso: Requiere token válido (heredado del Guard Global).
-   * Recupera el listado completo de unidades para su visualización en el panel.
-   */
   @Get()
   findAll() {
     return this.vehiclesService.findAll();
   }
 
-  /**
-   * Endpoint de Consulta Individual.
-   * @param id - Identificador único del vehículo.
-   */
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.vehiclesService.findOne(id);
   }
 
   /**
-   * Endpoint de Actualización Parcial (PATCH).
-   * * Acceso restringido: Permite modificar atributos específicos sin reescribir todo el objeto.
+   * Endpoint de Actualización Parcial con soporte para sustitución de imagen.
    */
   @Patch(':id')
   @Roles('superAdmin', 'logístico')
+  @UseInterceptors(FileInterceptor('foto_unidad'))
   update(
     @Param('id') id: string,
     @Body() updateDto: Partial<CreateVehicleDto>,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.vehiclesService.update(id, updateDto);
+    return this.vehiclesService.update(id, updateDto, file);
   }
 
-  /**
-   * Endpoint de Eliminación.
-   * * Acceso crítico: Solo el nivel jerárquico más alto (superAdmin) puede remover unidades.
-   */
   @Delete(':id')
   @Roles('superAdmin')
   remove(@Param('id') id: string) {

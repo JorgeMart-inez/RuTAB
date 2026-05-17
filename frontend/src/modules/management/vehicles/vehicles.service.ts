@@ -2,37 +2,24 @@ import { isAxiosError } from "axios";
 import { api } from "../../../config/api";
 import { VehicleFormData } from "./types";
 
-/** Punto de entrada principal para el recurso de vehículos en la API */
 const ENDPOINT = "/vehicles";
 
-/**
- * Procesador central de excepciones para respuestas de NestJS.
- * Normaliza errores de validación (class-validator), códigos de estado HTTP (409, 403, 404)
- * y fallos de red para convertirlos en mensajes claros para la interfaz de usuario.
- */
 const handleNestError = (error: unknown) => {
   if (isAxiosError(error) && error.response) {
     const data = error.response.data;
     const status = error.response.status;
 
-    // ─── MAPEO DE ERRORES CRÍTICOS DEL BACKEND ───
-    if (status === 403) {
+    if (status === 403)
       throw new Error(
         "No tienes permisos suficientes para realizar esta acción.",
       );
-    }
-
-    if (status === 409) {
+    if (status === 409)
       throw new Error(
         "Las placas ingresadas ya se encuentran registradas en el sistema.",
       );
-    }
-
-    if (status === 404) {
+    if (status === 404)
       throw new Error("El vehículo solicitado no existe o ya fue eliminado.");
-    }
 
-    // NestJS puede devolver el mensaje en 'message' (array o string) o 'error'
     const message = data?.message || data?.error || error.response.statusText;
     const finalMessage = Array.isArray(message) ? message.join(", ") : message;
 
@@ -44,12 +31,7 @@ const handleNestError = (error: unknown) => {
   );
 };
 
-/**
- * Capa de servicio para operaciones CRUD de vehículos.
- * Implementa la comunicación asíncrona, sanitización y parseo de tipos hacia la API.
- */
 export const VehicleService = {
-  /** Recupera el listado completo de unidades registradas */
   getAll: async () => {
     try {
       const { data } = await api.get(ENDPOINT);
@@ -59,17 +41,38 @@ export const VehicleService = {
     }
   },
 
-  /**
-   * Registra una nueva unidad.
-   * Realiza el parseo del rendimiento a número decimal antes del envío.
-   */
-  create: async (formData: VehicleFormData) => {
+  create: async (formData: VehicleFormData, fotoFile: File | null) => {
     try {
-      const { data } = await api.post(ENDPOINT, {
-        ...formData,
-        // Sincronización estricta de tipos: garantizamos que viaje un float/number al backend
-        rendimiento_combustible:
-          parseFloat(formData.rendimiento_combustible) || 0,
+      const dataPayload = new FormData();
+
+      dataPayload.append("placas", formData.placas.trim());
+      dataPayload.append("marca", formData.marca.trim());
+      dataPayload.append("modelo", formData.modelo.trim());
+      dataPayload.append("estatus", formData.estatus);
+      dataPayload.append(
+        "rendimiento_combustible",
+        (parseFloat(formData.rendimiento_combustible) || 0).toString(),
+      );
+
+      // ─── VALIDACIÓN Y EMPAQUETADO DEL ARCHIVO ───
+      if (fotoFile) {
+        // Imprimimos para confirmar que el hook sí nos pasó el archivo
+        console.log(
+          "🛠️ Empaquetando archivo en POST:",
+          fotoFile.name,
+          fotoFile.type,
+          fotoFile.size,
+        );
+        // IMPORTANTE: El nombre "foto_unidad" debe ser EXACTAMENTE el mismo
+        // que busca el @UseInterceptors(FileInterceptor('foto_unidad')) en NestJS
+        dataPayload.append("foto_unidad", fotoFile);
+      }
+
+      const { data } = await api.post(ENDPOINT, dataPayload, {
+        headers: {
+          // Forzamos a Axios a procesarlo como formulario multipart
+          "Content-Type": "multipart/form-data",
+        },
       });
       return data;
     } catch (error) {
@@ -77,15 +80,38 @@ export const VehicleService = {
     }
   },
 
-  /**
-   * Actualiza parcialmente un registro existente mediante PATCH.
-   */
-  update: async (id: string | number, formData: VehicleFormData) => {
+  update: async (
+    id: string | number,
+    formData: VehicleFormData,
+    fotoFile: File | null,
+  ) => {
     try {
-      const { data } = await api.patch(`${ENDPOINT}/${id}`, {
-        ...formData,
-        rendimiento_combustible:
-          parseFloat(formData.rendimiento_combustible) || 0,
+      const dataPayload = new FormData();
+
+      dataPayload.append("placas", formData.placas.trim());
+      dataPayload.append("marca", formData.marca.trim());
+      dataPayload.append("modelo", formData.modelo.trim());
+      dataPayload.append("estatus", formData.estatus);
+      dataPayload.append(
+        "rendimiento_combustible",
+        (parseFloat(formData.rendimiento_combustible) || 0).toString(),
+      );
+
+      if (fotoFile) {
+        console.log(
+          "🛠️ Empaquetando archivo en PATCH:",
+          fotoFile.name,
+          fotoFile.type,
+          fotoFile.size,
+        );
+        dataPayload.append("foto_unidad", fotoFile);
+      }
+
+      const { data } = await api.patch(`${ENDPOINT}/${id}`, dataPayload, {
+        headers: {
+          // Forzamos a Axios a procesarlo como formulario multipart
+          "Content-Type": "multipart/form-data",
+        },
       });
       return data;
     } catch (error) {
@@ -93,7 +119,6 @@ export const VehicleService = {
     }
   },
 
-  /** Elimina un registro de vehículo del sistema */
   delete: async (id: string | number) => {
     try {
       const { data } = await api.delete(`${ENDPOINT}/${id}`);

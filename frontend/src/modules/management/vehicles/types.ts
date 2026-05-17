@@ -26,6 +26,10 @@ export const vehicleFormSchema = z.object({
       message: "El rendimiento debe ser un valor mayor a 0",
     }),
   estatus: z.string().default("disponible"),
+
+  // ─── EXTENSIÓN PARA SOPORTE MULTIMEDIA ───
+  /** URL opcional o nullable de la foto de la unidad */
+  foto_unidad_url: z.string().optional().nullable(),
 });
 
 /** Tipo inferido directamente del esquema de Zod para la validación del formulario */
@@ -42,6 +46,7 @@ export interface Vehicle {
   modelo: string;
   rendimiento_combustible: number;
   estatus: string;
+  foto_unidad_url?: string | null; // ─── ADICIÓN CRÍTICA PARA RENDER EN CARDS Y PAGES ───
 }
 
 /**
@@ -54,6 +59,7 @@ export interface VehicleFormData {
   modelo: string;
   rendimiento_combustible: string;
   estatus: string;
+  foto_unidad_url?: string | null; // ─── EVITA CONFLICTOS DE ENLACE EN EL RESET/INITIAL_STATE ───
 }
 
 /**
