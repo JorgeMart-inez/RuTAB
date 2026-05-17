@@ -36,7 +36,7 @@ export const DriversForm: React.FC<DriverProps> = ({
             </h2>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 text-2xl"
+              className="text-slate-400 hover:text-slate-600 text-2xl cursor-pointer"
             >
               &times;
             </button>
@@ -77,12 +77,13 @@ export const DriversForm: React.FC<DriverProps> = ({
             {/* Información Personal */}
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                Nombre Completo
+                Nombre Completo *
               </label>
               <input
                 required
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                value={formData.nombre}
+                type="text"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-slate-800"
+                value={formData.nombre || ""}
                 onChange={(e) => handleChange("nombre", e.target.value)}
                 placeholder="Ej. Juan Pérez"
                 disabled={isLoading}
@@ -92,13 +93,13 @@ export const DriversForm: React.FC<DriverProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                  Correo Electrónico
+                  Correo Electrónico *
                 </label>
                 <input
                   required
                   type="email"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.correo}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-slate-800"
+                  value={formData.correo || ""}
                   onChange={(e) => handleChange("correo", e.target.value)}
                   placeholder="juan@ejemplo.com"
                   disabled={isLoading}
@@ -109,10 +110,11 @@ export const DriversForm: React.FC<DriverProps> = ({
                   Teléfono
                 </label>
                 <input
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.telefono}
+                  type="text"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-slate-800"
+                  value={formData.telefono || ""}
                   onChange={(e) => handleChange("telefono", e.target.value)}
-                  placeholder="9933..."
+                  placeholder="Ej. +52 993 312 3456"
                   disabled={isLoading}
                 />
               </div>
@@ -121,12 +123,13 @@ export const DriversForm: React.FC<DriverProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                  Tipo de Licencia
+                  Tipo de Licencia *
                 </label>
                 <input
                   required
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.licencia}
+                  type="text"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-slate-800"
+                  value={formData.licencia || ""}
                   onChange={(e) => handleChange("licencia", e.target.value)}
                   placeholder="Ej. A3"
                   disabled={isLoading}
@@ -134,13 +137,13 @@ export const DriversForm: React.FC<DriverProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                  Contraseña
+                  Contraseña {driver ? "" : "*"}
                 </label>
                 <input
                   required={!driver}
                   type="password"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.password}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-slate-800"
+                  value={formData.password || ""}
                   onChange={(e) => handleChange("password", e.target.value)}
                   placeholder={driver ? "Dejar en blanco..." : "*******"}
                   disabled={isLoading}
@@ -154,14 +157,14 @@ export const DriversForm: React.FC<DriverProps> = ({
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors disabled:opacity-50"
+                className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-50 flex justify-center items-center"
+                className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-50 flex justify-center items-center cursor-pointer"
               >
                 {isLoading
                   ? "Guardando..."
@@ -181,7 +184,7 @@ export const DriversForm: React.FC<DriverProps> = ({
           onClose={() => setIsCropModalOpen(false)}
           imageFile={selectedFile}
           onCropComplete={handleCropComplete}
-          aspectRatio={1} // Avatar cuadrado/circular
+          aspectRatio={1}
         />
       )}
     </>

@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from "react";
-import { Driver, DriverFormData } from "../types";
+import { Driver, DriverFormData, driverValidationSchema } from "../types";
 import { DriverService } from "../drivers.service";
 import { toast } from "sonner";
 
@@ -32,7 +32,7 @@ export const useDriverForm = (
         nombre: driver.nombre || "",
         licencia: driver.licencia || "",
         correo: driver.correo || "",
-        password: "", // Limpiamos para que no se envíe a menos que se edite
+        password: "", // Limpiamos para evitar re-envíos accidentales
         telefono: driver.telefono || "",
         foto_perfil_url: driver.foto_perfil_url || "",
       });
@@ -41,7 +41,7 @@ export const useDriverForm = (
       setFormData(INITIAL_STATE);
       setPreviewUrl(null);
     }
-    setSelectedFile(null); // Reiniciamos archivo pendiente
+    setSelectedFile(null);
   }, [driver, isOpen]);
 
   /**
@@ -59,7 +59,6 @@ export const useDriverForm = (
       const file = e.target.files[0];
       setSelectedFile(file);
       setIsCropModalOpen(true);
-      // Reseteamos el input por si el usuario cancela y vuelve a elegir la misma imagen
       e.target.value = "";
     }
   };
@@ -75,45 +74,50 @@ export const useDriverForm = (
   };
 
   /**
-   * Procesa el guardado: Sube imagen (si hay nueva) -> Guarda Chofer
+   * Procesa el guardado: Valida datos -> Sube imagen (si la hay) -> Transforma y Guarda
    */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    // 1. BARRERA DE SEGURIDAD: Validación y transformación local con Zod
+    const validation = driverValidationSchema.safeParse(formData);
+
+    if (!validation.success) {
+      const firstError = validation.error.errors[0].message;
+      toast.error(firstError);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      let currentPhotoUrl = formData.foto_perfil_url;
+      // Usamos los datos sanitizados por Zod (aquí teléfono y foto ya pueden ser null si venían vacíos)
+      const payload = { ...validation.data };
 
-      // 1. Si hay un archivo nuevo pendiente, lo subimos primero
+      // 2. Si se seleccionó una foto nueva, la subimos a Supabase
       if (selectedFile) {
         const uploadResult = await DriverService.uploadAvatar(selectedFile);
-        currentPhotoUrl = uploadResult.foto_perfil_url;
+        payload.foto_perfil_url = uploadResult.foto_perfil_url;
       }
 
-      // 2. Preparamos el payload final
-      const payload: DriverFormData = {
-        ...formData,
-        foto_perfil_url: currentPhotoUrl,
-      };
-
-      // Limpiamos el password si está vacío en edición
+      // 3. Sanitización de contraseña para el modo edición
       if (driver?.id && !payload.password) {
         delete payload.password;
       }
 
-      // 3. Guardar en Base de Datos
+      // 4. Envío seguro de datos limpios al Backend
       if (driver?.id) {
-        await DriverService.update(driver.id, payload);
-        toast.success("Chofer actualizado correctamente");
+        await DriverService.update(driver.id, payload as any);
+        toast.success("Conductor actualizado correctamente");
       } else {
-        await DriverService.create(payload);
-        toast.success("Chofer registrado exitosamente.");
+        await DriverService.create(payload as any);
+        toast.success("Conductor registrado exitosamente");
       }
 
       onSuccess();
       onClose();
     } catch (error: any) {
-      toast.error(error.message || "Error al guardar el chofer.");
+      toast.error(error.message || "Error inesperado al guardar el conductor.");
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +128,6 @@ export const useDriverForm = (
     isLoading,
     handleChange,
     handleSubmit,
-    // Exportamos propiedades para la UI de imagen
     previewUrl,
     handleFileSelect,
     isCropModalOpen,
