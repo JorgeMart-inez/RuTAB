@@ -1,4 +1,4 @@
-// /src/modules/management/customers/CustomersForm.tsx
+// frontend/src/modules/management/customers/CustomersForm.tsx
 import React from "react";
 import { X, MapPin } from "lucide-react";
 import { CustomerFormProps } from "./types";
@@ -116,7 +116,7 @@ export const CustomersForm: React.FC<CustomerFormProps> = ({
                 Teléfono
               </label>
               <input
-                type="tel"
+                type="text"
                 value={formData.telefono}
                 onChange={(e) => handleChange("telefono", e.target.value)}
                 placeholder="Ej. +56 9 1111 2222"
@@ -127,12 +127,11 @@ export const CustomersForm: React.FC<CustomerFormProps> = ({
             {/* Correo */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Correo Electrónico <span className="text-red-500">*</span>{" "}
-                {/* Añadido asterisco */}
+                Correo Electrónico <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
-                required // Añadido atributo required
+                required
                 value={formData.correo}
                 onChange={(e) => handleChange("correo", e.target.value)}
                 placeholder="Ej. contacto@empresa.com"
@@ -161,7 +160,7 @@ export const CustomersForm: React.FC<CustomerFormProps> = ({
               </div>
             </div>
 
-            {/* Coordenadas - Latitud */}
+            {/* Coordenadas - Latitud (Reforzado con min/max) */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Latitud <span className="text-red-500">*</span>
@@ -170,6 +169,8 @@ export const CustomersForm: React.FC<CustomerFormProps> = ({
                 type="number"
                 step="any"
                 required
+                min="-90"
+                max="90"
                 value={formData.latitude ?? ""}
                 onChange={(e) =>
                   handleChange(
@@ -182,7 +183,7 @@ export const CustomersForm: React.FC<CustomerFormProps> = ({
               />
             </div>
 
-            {/* Coordenadas - Longitud */}
+            {/* Coordenadas - Longitud (Reforzado con min/max) */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Longitud <span className="text-red-500">*</span>
@@ -191,6 +192,8 @@ export const CustomersForm: React.FC<CustomerFormProps> = ({
                 type="number"
                 step="any"
                 required
+                min="-180"
+                max="180"
                 value={formData.longitude ?? ""}
                 onChange={(e) =>
                   handleChange(
