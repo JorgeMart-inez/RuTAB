@@ -17,14 +17,18 @@ export const useDriverPage = () => {
   const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  /**
+   * Obtiene la lista de conductores desde el servidor
+   */
   const fetchDrivers = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await DriverService.getAll();
-      setDrivers(data);
+      // Aseguramos que data sea un arreglo antes de guardarlo para evitar romper el .map() de la UI
+      setDrivers(Array.isArray(data) ? data : []);
     } catch (error: any) {
       toast.error(
-        error.message || "Sucedió un problema al cargar los choferes.",
+        error.message || "Sucedió un problema al cargar los conductores.",
       );
     } finally {
       setIsLoading(false);
@@ -38,13 +42,13 @@ export const useDriverPage = () => {
 
   // --- Lógica de Control de Formulario ---
 
-  /** Prepara el modal para registrar un nuevo chofer */
+  /** Prepara el modal para registrar un nuevo conductor */
   const openNewModal = () => {
     setSelectedDriver(null);
     setIsModalOpen(true);
   };
 
-  /** Prepara el modal para editar un chofer existente */
+  /** Prepara el modal para editar un conductor existente */
   const openEditModal = (driver: Driver) => {
     setSelectedDriver(driver);
     setIsModalOpen(true);
@@ -63,10 +67,9 @@ export const useDriverPage = () => {
     setIsConfirmOpen(true);
   };
 
-  /** Cierra el modal de confirmación y limpia la selección tras la animación de salida */
+  /** Cierra el modal de confirmación de forma limpia */
   const closeConfirmModal = () => {
     setIsConfirmOpen(false);
-    // Delay para preservar los datos en el UI durante la transición de cierre del modal
     setTimeout(() => setDriverToDelete(null), 200);
   };
 
@@ -74,42 +77,32 @@ export const useDriverPage = () => {
   const executeDelete = async () => {
     if (!driverToDelete) return;
 
-    setIsDeleting(true); // Bloqueamos botones
+    setIsDeleting(true);
     try {
       await DriverService.delete(driverToDelete.id);
-      toast.success(`Chofer ${driverToDelete.nombre} eliminado correctamente`);
+      toast.success(
+        `Conductor ${driverToDelete.nombre} eliminado correctamente`,
+      );
 
       // Sincronización de la lista local
       await fetchDrivers();
-
-      // Cerramos el modal primero
       closeConfirmModal();
-
-      // --- LA CLAVE ESTÁ AQUÍ ---
-      // Debemos resetear el estado de carga para que la próxima vez que se abra esté limpio.
-      // Lo ideal es un pequeño delay o hacerlo justo antes de cerrar para que la UI no parpadee.
-      setIsDeleting(false);
     } catch (error: any) {
-      toast.error(error.message || "Error al eliminar el chofer");
-      // Si falla, también desbloqueamos
+      toast.error(error.message || "Error al eliminar el conductor");
+    } finally {
       setIsDeleting(false);
     }
   };
 
   return {
-    // Datos y carga
     drivers,
     isLoading,
     fetchDrivers,
-
-    // Gestión de Formulario
     isModalOpen,
     selectedDriver,
     openNewModal,
     openEditModal,
     closeModal,
-
-    // Gestión de Eliminación
     isConfirmOpen,
     driverToDelete,
     isDeleting,
