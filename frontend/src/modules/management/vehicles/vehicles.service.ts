@@ -1,5 +1,3 @@
-// src/modules/management/vehicles/vehicles.service.ts
-
 import { isAxiosError } from "axios";
 import { api } from "../../../config/api";
 import { VehicleFormData } from "./types";
@@ -9,32 +7,46 @@ const ENDPOINT = "/vehicles";
 
 /**
  * Procesador central de excepciones para respuestas de NestJS.
- * Normaliza errores de validación (class-validator) y códigos de estado HTTP
- * para convertirlos en mensajes legibles por la interfaz de usuario.
+ * Normaliza errores de validación (class-validator), códigos de estado HTTP (409, 403, 404)
+ * y fallos de red para convertirlos en mensajes claros para la interfaz de usuario.
  */
 const handleNestError = (error: unknown) => {
   if (isAxiosError(error) && error.response) {
     const data = error.response.data;
+    const status = error.response.status;
 
-    // NestJS puede devolver el mensaje en 'message' (array o string) o 'error'
-    const message = data.message || data.error || error.response.statusText;
-    const finalMessage = Array.isArray(message) ? message.join(", ") : message;
-
-    // Gestión específica para restricciones de Guardia (RBAC) o Policies
-    if (error.response.status === 403) {
+    // ─── MAPEO DE ERRORES CRÍTICOS DEL BACKEND ───
+    if (status === 403) {
       throw new Error(
         "No tienes permisos suficientes para realizar esta acción.",
       );
     }
 
+    if (status === 409) {
+      throw new Error(
+        "Las placas ingresadas ya se encuentran registradas en el sistema.",
+      );
+    }
+
+    if (status === 404) {
+      throw new Error("El vehículo solicitado no existe o ya fue eliminado.");
+    }
+
+    // NestJS puede devolver el mensaje en 'message' (array o string) o 'error'
+    const message = data?.message || data?.error || error.response.statusText;
+    const finalMessage = Array.isArray(message) ? message.join(", ") : message;
+
     throw new Error(finalMessage || "Error en la petición al servidor");
   }
-  throw new Error("Error de conexión con el servidor");
+
+  throw new Error(
+    "Error de conexión con el servidor. Por favor, verifica tu red.",
+  );
 };
 
 /**
  * Capa de servicio para operaciones CRUD de vehículos.
- * Implementa la comunicación asíncrona y la transformación de datos para el backend.
+ * Implementa la comunicación asíncrona, sanitización y parseo de tipos hacia la API.
  */
 export const VehicleService = {
   /** Recupera el listado completo de unidades registradas */
@@ -47,14 +59,15 @@ export const VehicleService = {
     }
   },
 
-  /** * Registra una nueva unidad.
+  /**
+   * Registra una nueva unidad.
    * Realiza el parseo del rendimiento a número decimal antes del envío.
    */
   create: async (formData: VehicleFormData) => {
     try {
       const { data } = await api.post(ENDPOINT, {
         ...formData,
-        // Sincronización de tipo: el backend espera un float/number
+        // Sincronización estricta de tipos: garantizamos que viaje un float/number al backend
         rendimiento_combustible:
           parseFloat(formData.rendimiento_combustible) || 0,
       });
@@ -64,7 +77,8 @@ export const VehicleService = {
     }
   },
 
-  /** * Actualiza parcialmente un registro existente mediante PATCH.
+  /**
+   * Actualiza parcialmente un registro existente mediante PATCH.
    */
   update: async (id: string | number, formData: VehicleFormData) => {
     try {
