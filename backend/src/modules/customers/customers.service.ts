@@ -111,12 +111,19 @@ export class CustomersService {
     }
 
     // Valores finales
-    const nombre = rest.nombre ?? clienteActual.nombre;
-    const telefono = rest.telefono ?? clienteActual.telefono;
-    const direccion = rest.direccion ?? clienteActual.direccion;
-    const correo = rest.correo ?? clienteActual.correo; // Ahora es directo
-    const contacto = rest.contacto ?? clienteActual.contacto;
-    const estatus = rest.estatus ?? clienteActual.estatus;
+
+    const nombre =
+      rest.nombre !== undefined ? rest.nombre : clienteActual.nombre;
+    const telefono =
+      rest.telefono !== undefined ? rest.telefono : clienteActual.telefono;
+    const direccion =
+      rest.direccion !== undefined ? rest.direccion : clienteActual.direccion;
+    const correo =
+      rest.correo !== undefined ? rest.correo : clienteActual.correo;
+    const contacto =
+      rest.contacto !== undefined ? rest.contacto : clienteActual.contacto;
+    const estatus =
+      rest.estatus !== undefined ? rest.estatus : clienteActual.estatus;
 
     await this.prisma.$executeRaw`
     UPDATE clientes
