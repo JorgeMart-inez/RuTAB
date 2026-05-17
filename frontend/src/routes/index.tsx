@@ -63,6 +63,11 @@ const IncidentsPage = lazy(() =>
     default: m.IncidentsPage,
   })),
 );
+const RoutesPage = lazy(() =>
+  import("../modules/audit/routes/pages/RoutesPage").then((m) => ({
+    default: m.RoutesPage,
+  })),
+);
 const OrdersPage = lazy(() =>
   import("../modules/management/orders/OrdersPage").then((m) => ({
     default: m.OrdersPage,
@@ -71,6 +76,11 @@ const OrdersPage = lazy(() =>
 const ProfilePage = lazy(() =>
   import("../modules/profile/pages/ProfilePage").then((m) => ({
     default: m.ProfilePage,
+  })),
+);
+const ReportPage = lazy(() =>
+  import("../modules/reports/pages/ReportPage").then((m) => ({
+    default: m.ReportPage,
   })),
 );
 
@@ -194,6 +204,14 @@ export const AppRoutes = () => {
             }
           />
           <Route
+            path="auditoria/rutas"
+            element={
+              <RoleGuard allowedRoles={["superAdmin", "auditor"]}>
+                <RoutesPage />
+              </RoleGuard>
+            }
+          />
+          <Route
             path="auditoria/evidencias"
             element={
               <RoleGuard allowedRoles={["superAdmin", "auditor", "logístico"]}>
@@ -210,6 +228,14 @@ export const AppRoutes = () => {
             }
           />
         </Route>
+        <Route
+          path="auditoria/reportes"
+          element={
+            <RoleGuard allowedRoles={["superAdmin", "auditor", "logístico"]}>
+              <ReportPage />
+            </RoleGuard>
+          }
+        />
 
         <Route
           path="perfil"

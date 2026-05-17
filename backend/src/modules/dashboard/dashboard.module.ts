@@ -9,6 +9,6 @@ import { ReportService } from './report.service';
   imports: [PrismaModule],
   controllers: [DashboardController],
   providers: [DashboardService, DashboardGateway, ReportService],
-  exports: [DashboardGateway], // Exportamos el gateway para que pueda ser usado en otros módulos
+  exports: [DashboardGateway, ReportService], // Exportamos para que pueda ser usado en otros módulos
 })
 export class DashboardModule {}

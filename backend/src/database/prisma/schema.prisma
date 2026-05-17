@@ -51,7 +51,7 @@ model detalles_ruta {
   pedido_id      String?  @db.Uuid
   orden_entrega  Int?
   comentarios    String?
-  estado_intento String?  @default("pendiente")
+  estado_intento String   @default("pendiente")
   pedidos        pedidos? @relation(fields: [pedido_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   rutas          rutas?   @relation(fields: [ruta_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -161,4 +161,15 @@ model ubicacion_actual {
   rutas               rutas                    @relation(fields: [ruta_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ruta_actual")
 
   @@index([ultima_coordenada], map: "idx_ubicacion_actual_geog", type: Gist)
+}
+
+model reportes {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String   @db.VarChar(255)
+  periods     String   @db.VarChar(50)
+  startdate   DateTime @db.Timestamptz(6)
+  enddate     DateTime @db.Timestamptz(6)
+  fileurl     String
+  createdbyid String
+  createdat   DateTime @default(now()) @db.Timestamptz(6)
 }

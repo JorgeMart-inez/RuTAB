@@ -6,9 +6,11 @@ import { IncidentMonitor } from './components/IncidentMonitor';
 import { DailyOrdersCard } from './components/DailyOrdersCard';
 import { FileText, Table } from 'lucide-react';
 import { exportDashboardCSV, exportDashboardPDF } from './services/dashboardService';
+import { WeeklyPerformance } from './components/WeeklyPerformance';
+import { MiniStats } from './components/MiniStats';
 
 export const DashboardPage: React.FC = () => {
-  const { stats, operations, isLoading } = useDashboard();
+  const { stats, operations, isLoading, weeklyData } = useDashboard();
 
   if (isLoading) return <div>Cargando centro de mando...</div>;
 
@@ -22,7 +24,15 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         <div className="flex gap-3">
-          {/* Dejamos el espacio para el CSV que mencionaste */}
+          {/* Botón para exportar PDF */}
+          <button
+            onClick={exportDashboardPDF}
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
+          >
+            <FileText size={16} className="text-red-500" />
+            Exportar PDF
+          </button>
+          {/* Botón para exportar CSV */}
           <button
             onClick={() => exportDashboardCSV(stats)}
             className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
@@ -59,9 +69,21 @@ export const DashboardPage: React.FC = () => {
 
         {/* COLUMNA DERECHA: Pedidos del Día */}
         <div className="flex flex-col">
-          <DailyOrdersCard pedidos={stats?.pedidos} />
+          <DailyOrdersCard pedidos={stats?.pedidos.enRuta} />
         </div>
 
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
+        {/* Gráfica Semanal - Ocupa 3/4 del espacio */}
+        <div className="lg:col-span-3">
+          <WeeklyPerformance data={weeklyData} />
+        </div>
+
+        {/* Mini KPIs - Ocupa 1/4 del espacio */}
+        <div className="lg:col-span-1">
+          <MiniStats stats={stats} />
+        </div>
       </div>
 
     </div>
