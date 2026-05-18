@@ -19,7 +19,7 @@ import * as Location from 'expo-location';
 import SignatureScreen, { SignatureViewRef } from 'react-native-signature-canvas';
 
 import { RoutesRoutes, RoutesStackParamList } from '../../../navigation/navigation-types';
-import { apiClient, getErrorMessage } from '../../../core/api/apiClient'; // Importamos el helper de errores
+import { apiClient, getErrorMessage } from '../../../core/api/apiClient';
 import { useFetchRoutes } from '../hooks/useFetchRoutes';
 
 export const DeliveryEvidenceScreen = () => {
@@ -58,7 +58,7 @@ export const DeliveryEvidenceScreen = () => {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.4, // Reducimos un poco más para asegurar subidas rápidas en 4G/3G
+        quality: 0.4,
       });
 
       if (!result.canceled) {
@@ -83,7 +83,6 @@ export const DeliveryEvidenceScreen = () => {
   const handleFinishDelivery = async () => {
     if (!canFinish) return;
 
-    // Validación de seguridad para la Ruta
     if (!routeData?.id) {
       Alert.alert(
         'Error de Sesión',
@@ -95,7 +94,6 @@ export const DeliveryEvidenceScreen = () => {
     try {
       setIsSending(true);
 
-      // 1. Obtención de GPS robusta
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -110,10 +108,8 @@ export const DeliveryEvidenceScreen = () => {
       try {
         location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
-          // Timeout de 10 segundos para no dejar la app colgada si el GPS falla
         });
       } catch (locError) {
-        // Fallback a la última ubicación conocida si el sensor falla en tiempo real
         location = await Location.getLastKnownPositionAsync();
         if (!location) {
           throw new Error('No se pudo obtener la ubicación GPS. Verifica tu señal.');
@@ -122,7 +118,6 @@ export const DeliveryEvidenceScreen = () => {
 
       const { latitude, longitude } = location.coords;
 
-      // 2. Preparación de FormData
       const formData = new FormData();
       const filename = image.split('/').pop() || `entrega_${pedidoId}.jpg`;
       const match = /\.(\w+)$/.exec(filename);
@@ -139,7 +134,6 @@ export const DeliveryEvidenceScreen = () => {
       formData.append('latitude', latitude.toString());
       formData.append('longitude', longitude.toString());
 
-      // 3. Envío al Servidor
       await apiClient.post('/mobile-app/evidence/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -151,7 +145,6 @@ export const DeliveryEvidenceScreen = () => {
         },
       ]);
     } catch (error: any) {
-      // Usamos el helper centralizado para manejar arrays de errores o fallos de red
       const message = getErrorMessage(error);
       Alert.alert('No se pudo completar', message);
     } finally {
@@ -224,7 +217,10 @@ export const DeliveryEvidenceScreen = () => {
             )}
           </View>
 
-          <View className="h-64 w-full overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+          {/* Corrección: Bloqueamos eventos táctiles usando pointerEvents cuando ya existe la firma */}
+          <View
+            pointerEvents={signature ? 'none' : 'auto'}
+            className="h-64 w-full overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
             {isFocused ? (
               <SignatureScreen
                 key={`${pedidoId}_${isFocused}`}
