@@ -147,27 +147,55 @@ export class DashboardService {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const [topIncidencia, topRuta] = await Promise.all([
-      // Buscamos la incidencia más repetida
-      this.prisma.incidencias.groupBy({
-        by: ['descripcion'],
-        where: { created_at: { gte: sevenDaysAgo } },
-        _count: { descripcion: true },
-        orderBy: { _count: { descripcion: 'desc' } },
-        take: 1
-      }),
-      // Buscamos la ruta con mejor desempeño (puedes ajustar esto a choferes)
-      this.prisma.rutas.findFirst({
-        where: { created_at: { gte: sevenDaysAgo } },
-        include: { choferes: true, vehiculos: true },
-        // Aquí se puede añadir lógica de conteo de pedidos entregados
-      })
-    ]);
+    // Traemos los detalles de rutas asociados a pedidos creados en los últimos 7 días
+    const detalles = await this.prisma.detalles_ruta.findMany({
+      where: { pedidos: { created_at: { gte: sevenDaysAgo } } },
+      include: {
+        rutas: { include: { choferes: true, vehiculos: true } },
+        pedidos: true,
+      },
+    });
+
+    const choferCounts: Record<string, { name: string; count: number }> = {};
+    const unitCounts: Record<string, { placas: string; count: number }> = {};
+
+    detalles.forEach((d) => {
+      const ruta = d.rutas;
+      if (ruta?.choferes) {
+        const id = ruta.choferes.id;
+        choferCounts[id] = choferCounts[id] || { name: ruta.choferes.nombre, count: 0 };
+        choferCounts[id].count++;
+      }
+
+      if (ruta?.vehiculos) {
+        const id = ruta.vehiculos.id;
+        unitCounts[id] = unitCounts[id] || { placas: ruta.vehiculos.placas, count: 0 };
+        unitCounts[id].count++;
+      }
+    });
+
+    // Elegimos el chofer y la unidad con mayor conteo
+    const bestChoferEntry = Object.values(choferCounts).sort((a, b) => b.count - a.count)[0];
+    const bestUnitEntry = Object.values(unitCounts).sort((a, b) => b.count - a.count)[0];
+
+    // Calculamos la incidencia más frecuente en los últimos 7 días
+    const incidencias = await this.prisma.incidencias.findMany({
+      where: { created_at: { gte: sevenDaysAgo } },
+      select: { descripcion: true },
+    });
+
+    const incCounts: Record<string, number> = {};
+    incidencias.forEach((i) => {
+      const key = i.descripcion || 'Sin descripción';
+      incCounts[key] = (incCounts[key] || 0) + 1;
+    });
+
+    const commonIssueEntry = Object.keys(incCounts).sort((a, b) => incCounts[b] - incCounts[a])[0];
 
     return {
-      bestChofer: topRuta?.choferes?.nombre || "Sin datos",
-      bestUnit: topRuta?.vehiculos?.placas || "N/A",
-      commonIssue: topIncidencia[0]?.descripcion || "Ninguna"
+      bestChofer: bestChoferEntry?.name || 'Sin datos',
+      bestUnit: bestUnitEntry?.placas || 'N/A',
+      commonIssue: commonIssueEntry || 'Ninguna',
     };
   }
 }
