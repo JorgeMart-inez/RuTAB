@@ -1,3 +1,5 @@
+// backend/src/modules/vehicles/vehicles.service.ts
+
 import {
   Injectable,
   ConflictException,
@@ -20,6 +22,9 @@ export class VehiclesService {
     );
   }
 
+  /**
+   * Extrae el nombre del archivo a partir de su URL pública.
+   */
   private extractFileName(url: string | null): string | null {
     if (!url) return null;
     const parts = url.split('/');
@@ -27,7 +32,7 @@ export class VehiclesService {
   }
 
   /**
-   * Sube la imagen a Supabase con logs de seguimiento
+   * Sube una imagen al almacenamiento de Supabase en formato WebP.
    */
   private async uploadImageToStorage(
     file: Express.Multer.File,
@@ -35,12 +40,7 @@ export class VehiclesService {
   ): Promise<string> {
     const fileName = `${placas.toLowerCase()}-${Date.now()}.webp`;
 
-    console.log(
-      `🚀 [Storage] Intentando subir archivo: ${fileName} (${file.size} bytes)`,
-    );
-
-    // Forzamos el envío del buffer directo asegurando el Content-Type WebP
-    const { data, error } = await this.supabase.storage
+    const { error } = await this.supabase.storage
       .from(this.BUCKET_NAME)
       .upload(fileName, file.buffer, {
         contentType: 'image/webp',
@@ -48,16 +48,10 @@ export class VehiclesService {
       });
 
     if (error) {
-      console.error('❌ [Storage Error] Supabase rechazó la subida:', error);
       throw new BadRequestException(
         `Fallo en Supabase Storage: ${error.message}`,
       );
     }
-
-    console.log(
-      '✅ [Storage] Archivo guardado con éxito. Data devuelta:',
-      data,
-    );
 
     const { data: urlData } = this.supabase.storage
       .from(this.BUCKET_NAME)
@@ -66,25 +60,19 @@ export class VehiclesService {
     return urlData.publicUrl;
   }
 
-  private async deleteImageFromStorage(imageUrl: string | null) {
+  /**
+   * Elimina una imagen existente del almacenamiento de Supabase.
+   */
+  private async deleteImageFromStorage(imageUrl: string | null): Promise<void> {
     const fileName = this.extractFileName(imageUrl);
     if (!fileName) return;
 
-    console.log(`🗑️ [Storage] Eliminando archivo antiguo: ${fileName}`);
-    const { error } = await this.supabase.storage
-      .from(this.BUCKET_NAME)
-      .remove([fileName]);
-
-    if (error) {
-      console.error(
-        `⚠️ [Storage Error] No se pudo borrar ${fileName}:`,
-        error.message,
-      );
-    } else {
-      console.log(`✅ [Storage] Archivo eliminado del bucket.`);
-    }
+    await this.supabase.storage.from(this.BUCKET_NAME).remove([fileName]);
   }
 
+  /**
+   * Sanitiza y estructura los datos de entrada antes de persistirlos en Prisma.
+   */
   private sanitizeDataForPrisma(
     dto: Partial<CreateVehicleDto>,
     fotoUrl?: string,
@@ -113,14 +101,10 @@ export class VehiclesService {
     return prismaData;
   }
 
-  // --- INTERFACES CRUD ---
-
+  /**
+   * Registra un nuevo vehículo y procesa su imagen si se proporciona.
+   */
   async create(data: CreateVehicleDto, file?: Express.Multer.File) {
-    console.log(
-      '📥 [POST /vehicles] Petición recibida. ¿Viene archivo?:',
-      !!file,
-    );
-
     const existe = await this.prisma.vehiculos.findUnique({
       where: { placas: data.placas },
     });
@@ -136,33 +120,36 @@ export class VehiclesService {
     return this.prisma.vehiculos.create({ data: cleanData });
   }
 
+  /**
+   * Retorna todos los vehículos registrados.
+   */
   async findAll() {
     return this.prisma.vehiculos.findMany();
   }
 
+  /**
+   * Retorna un vehículo específico por su ID.
+   */
   async findOne(id: string) {
     const vehiculo = await this.prisma.vehiculos.findUnique({ where: { id } });
     if (!vehiculo) throw new NotFoundException('Vehículo no encontrado');
     return vehiculo;
   }
 
+  /**
+   * Actualiza los datos de un vehículo y reemplaza la imagen anterior si se recibe una nueva.
+   */
   async update(
     id: string,
     data: Partial<CreateVehicleDto>,
     file?: Express.Multer.File,
   ) {
-    console.log(
-      `📥 [PATCH /vehicles/${id}] Petición recibida. ¿Viene archivo?:`,
-      !!file,
-    );
-
     const vehiculo = await this.prisma.vehiculos.findUnique({ where: { id } });
     if (!vehiculo) throw new NotFoundException('Vehículo no encontrado');
 
     let fotoUrl = data.foto_unidad_url;
 
     if (file) {
-      // Si ya existía una foto en la base de datos, la purgamos del Storage
       if (vehiculo.foto_unidad_url) {
         await this.deleteImageFromStorage(vehiculo.foto_unidad_url);
       }
@@ -174,11 +161,13 @@ export class VehiclesService {
     return this.prisma.vehiculos.update({ where: { id }, data: cleanData });
   }
 
+  /**
+   * Elimina de forma física el vehículo y su imagen asociada.
+   */
   async remove(id: string) {
     const vehiculo = await this.prisma.vehiculos.findUnique({ where: { id } });
     if (!vehiculo) throw new NotFoundException('Vehículo no encontrado');
 
-    // Purga física de la foto al eliminar el registro
     if (vehiculo.foto_unidad_url) {
       await this.deleteImageFromStorage(vehiculo.foto_unidad_url);
     }

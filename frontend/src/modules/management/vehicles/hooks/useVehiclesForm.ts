@@ -12,7 +12,7 @@ const INITIAL_STATE: VehicleFormData = {
 };
 
 /**
- * Hook personalizado para la gestión lógica, validación con Zod y procesamiento de imágenes del vehículo.
+ * Hook para la gestión del estado, validación con Zod y procesamiento de la imagen del vehículo.
  */
 export const useVehiclesForm = (
   vehicle: Vehicle | null | undefined,
@@ -26,15 +26,13 @@ export const useVehiclesForm = (
     Partial<Record<keyof VehicleFormData, string>>
   >({});
 
-  // ─── ESTADOS PARA LA GESTIÓN DE LA IMAGEN ───
-  const [selectedFile, setSelectedFile] = useState<File | null>(null); // Archivo original antes de recortar
-  const [croppedFile, setCroppedFile] = useState<File | null>(null); // Archivo WebP final recortado
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // URL para mostrar la imagen en el formulario
-  const [isCropModalOpen, setIsCropModalOpen] = useState(false); // Interruptor del modal de recorte
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [croppedFile, setCroppedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
 
   /**
-   * Efecto de Sincronización e Hidratación de datos.
-   * Maneja de manera limpia las URLs remotas existentes y libera memoria de las temporales.
+   * Sincroniza e hidrata el estado del formulario con los datos del vehículo recibido.
    */
   useEffect(() => {
     setErrors({});
@@ -50,14 +48,12 @@ export const useVehiclesForm = (
           vehicle.rendimiento_combustible?.toString() || "",
         estatus: vehicle.estatus || "disponible",
       });
-      // Cast explícito de la URL remota guardada en BD que vendrá en la consulta (heredada de la tabla/DTO)
       setPreviewUrl((vehicle as any).foto_unidad_url || null);
     } else {
       setFormData(INITIAL_STATE);
       setPreviewUrl(null);
     }
 
-    // Limpieza preventiva de URLs de objeto al cerrar o cambiar de modo
     return () => {
       if (previewUrl && previewUrl.startsWith("blob:")) {
         URL.revokeObjectURL(previewUrl);
@@ -66,31 +62,32 @@ export const useVehiclesForm = (
   }, [vehicle, isOpen]);
 
   /**
-   * Intercepta la selección del archivo desde el explorador del sistema.
+   * Captura el archivo seleccionado del sistema y abre el modal de recorte.
    */
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
-      setIsCropModalOpen(true); // Despierta inmediatamente al recortador visual
+      setIsCropModalOpen(true);
     }
   };
 
   /**
-   * Recibe el archivo binario WebP optimizado e inyecta la previsualización local.
+   * Almacena el archivo recortado final y genera su URL de previsualización local.
    */
   const handleCropComplete = (croppedImageFile: File) => {
     setCroppedFile(croppedImageFile);
 
-    // Revocamos la previsualización local anterior si era un blob, evitando fugas de memoria
     if (previewUrl && previewUrl.startsWith("blob:")) {
       URL.revokeObjectURL(previewUrl);
     }
 
-    // Creamos la nueva URL temporal para renderizar el recorte en el formulario
     setPreviewUrl(URL.createObjectURL(croppedImageFile));
     setIsCropModalOpen(false);
   };
 
+  /**
+   * Actualiza el valor de un campo específico del formulario y remueve su error asociado.
+   */
   const handleChange = (field: keyof VehicleFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -102,6 +99,9 @@ export const useVehiclesForm = (
     }
   };
 
+  /**
+   * Valida los datos del formulario con Zod y envía la petición de creación o actualización.
+   */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -123,7 +123,6 @@ export const useVehiclesForm = (
 
     try {
       if (vehicle?.id) {
-        // Pasamos tanto los textos del formulario como el binario de la imagen recortada
         await VehicleService.update(vehicle.id, formData, croppedFile);
         toast.success("Vehículo actualizado correctamente");
       } else {

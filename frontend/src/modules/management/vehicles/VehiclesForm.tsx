@@ -1,20 +1,17 @@
+// frontend/src/modules/management/vehicles/VehiclesForm.tsx
+
 import React, { useRef } from "react";
 import { Camera, Upload } from "lucide-react";
 import { VehicleFormProps } from "./types";
 import { useVehiclesForm } from "./hooks/useVehiclesForm";
 import { ImageCropperModal } from "../../../components/ui/ImageCropperModal";
 
-/**
- * Componente de interfaz para la gestión (creación/edición) de vehículos.
- * Integra validaciones locales, manejo de errores por campo e interfaz de recorte de imagen.
- */
 export const VehicleForm: React.FC<VehicleFormProps> = ({
   isOpen,
   onClose,
   onSuccess,
   vehicle,
 }) => {
-  // Desestructuramos las nuevas propiedades multimedia desde nuestro hook robustecido
   const {
     formData,
     isLoading,
@@ -29,7 +26,6 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({
     handleSubmit,
   } = useVehiclesForm(vehicle, isOpen, onSuccess, onClose);
 
-  // Referencia para disparar el input de tipo file oculto de forma programática
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -42,7 +38,7 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({
     <>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          {/* Encabezado */}
+          {/* Cabecera del modal */}
           <div className="p-6 border-b border-slate-100 flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-800">
               {vehicle ? "Editar Vehículo" : "Nuevo Vehículo"}
@@ -57,7 +53,7 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({
 
           {/* Formulario principal */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* ─── ZONA DE CARGA Y PREVISUALIZACIÓN DE IMAGEN ─── */}
+            {/* Carga y previsualización de imagen */}
             <div className="flex flex-col items-center justify-center pb-2">
               <label className="block text-xs font-bold text-slate-400 uppercase mb-2 self-start">
                 Fotografía de la Unidad
@@ -83,7 +79,6 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({
                       alt="Previsualización de la unidad"
                       className="w-full h-full object-cover"
                     />
-                    {/* Capa flotante hover (Overlay) */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity text-xs font-semibold gap-1">
                       <Camera size={18} />
                       <span>Cambiar Foto</span>
@@ -176,7 +171,7 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({
               </div>
             </div>
 
-            {/* Configuración operativa y eficiencia */}
+            {/* Parámetros operativos */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
@@ -221,7 +216,7 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({
               </div>
             </div>
 
-            {/* Acciones del formulario */}
+            {/* Acciones de envío y cierre */}
             <div className="pt-4 flex gap-3">
               <button
                 type="button"
@@ -243,12 +238,12 @@ export const VehicleForm: React.FC<VehicleFormProps> = ({
         </div>
       </div>
 
-      {/* ─── MODAL GLOBAL DE RECORTE (RENDERING SEGURO) ─── */}
+      {/* Modal para el recorte de imagen */}
       {isCropModalOpen && selectedFile && (
         <ImageCropperModal
           isOpen={isCropModalOpen}
           imageFile={selectedFile}
-          aspectRatio={1} // Proporción 1:1 perfecta para la ficha del vehículo
+          aspectRatio={1}
           onClose={() => setIsCropModalOpen(false)}
           onCropComplete={handleCropComplete}
         />

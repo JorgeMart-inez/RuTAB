@@ -1,3 +1,5 @@
+// frontend/src/modules/management/vehicles/VehiclesPage.tsx
+
 import React, { useState, useMemo } from "react";
 import {
   Truck,
@@ -27,26 +29,29 @@ export const VehiclesPage: React.FC = () => {
     isConfirmOpen,
     vehicleToDelete,
     isDeleting,
-    confirmDelete,
     closeConfirmModal,
     executeDelete,
+    confirmDelete,
   } = useVehiclesPage();
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Lógica de filtrado dinámico para la barra de búsqueda
+  /**
+   * Filtrado dinámico de vehículos por modelo, placas o marca.
+   */
   const filteredVehicles = useMemo(() => {
+    const term = searchTerm.toLowerCase();
     return vehicles.filter(
       (v) =>
-        v.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.placas.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.marca.toLowerCase().includes(searchTerm.toLowerCase()),
+        v.modelo.toLowerCase().includes(term) ||
+        v.placas.toLowerCase().includes(term) ||
+        v.marca.toLowerCase().includes(term),
     );
   }, [searchTerm, vehicles]);
 
   return (
     <div className="p-10 bg-slate-50 min-h-screen">
-      {/* Header con estilo unificado */}
+      {/* Encabezado principal */}
       <div className="flex justify-between items-end mb-10">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
@@ -65,7 +70,7 @@ export const VehiclesPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Barra de Búsqueda Minimalista */}
+      {/* Barra de búsqueda */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-10">
         <div className="relative max-w-2xl">
           <Search
@@ -82,7 +87,7 @@ export const VehiclesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid de Vehículos con estilo de Cards Compactas e Interactivas */}
+      {/* Listado de vehículos / Indicador de carga */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-slate-100">
           <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
@@ -100,7 +105,7 @@ export const VehiclesPage: React.FC = () => {
               <div className="p-7 pb-5">
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-5">
-                    {/* ─── CONTENEDOR MULTIMEDIA DE LA UNIDAD ─── */}
+                    {/* Visualización de la imagen del vehículo */}
                     <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center bg-blue-50 text-blue-500 group-hover:bg-[#123a5d] group-hover:text-white transition-all duration-300 flex-shrink-0 shadow-inner">
                       {v.foto_unidad_url ? (
                         <img
@@ -124,7 +129,7 @@ export const VehiclesPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Badge Dinámico multi-estatus adaptado a tu esquema */}
+                  {/* Badge de estatus de la unidad */}
                   <span
                     className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter border ${
                       v.estatus === "disponible"
@@ -142,7 +147,7 @@ export const VehiclesPage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Detalles Técnicos Agrupados */}
+                {/* Ficha técnica del vehículo */}
                 <div className="grid grid-cols-3 gap-3 p-4 bg-slate-50/80 rounded-2xl border border-slate-100 mb-2">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5 text-slate-400">
@@ -180,11 +185,11 @@ export const VehiclesPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Botones de Acción integrados en la base */}
+              {/* Botones de acción */}
               <div className="flex border-t border-slate-50 mt-auto">
                 <button
                   onClick={() => openEditModal(v)}
-                  className="flex-1 flex items-center justify-center gap-2 py-4 text-slate-500 font-bold text-sm hover:bg-slate-50 hover:text-blue-600 transition-all border-r border-slate-50 cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 text-slate-500 font-bold text-sm hover:bg-slate-50 hover:text-blue-600 transition-all border-r border-slate-50  cursor-pointer"
                 >
                   <Pencil size={16} />
                   Editar Unidad
@@ -201,7 +206,7 @@ export const VehiclesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Modales de Gestión */}
+      {/* Modales de gestión de vehículos */}
       {isModalOpen && (
         <VehicleForm
           isOpen={isModalOpen}

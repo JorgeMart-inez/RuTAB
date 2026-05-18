@@ -1,3 +1,5 @@
+// backend/src/modules/vehicles/dto/create-vehicle.dto.ts
+
 import {
   IsString,
   IsNotEmpty,
@@ -36,10 +38,9 @@ export class CreateVehicleDto {
   @IsOptional()
   foto_unidad_url?: string;
 
-  // ─── AGREGA ESTA LÍNEA PARA BLINDAR EL MULTIPART/FORMDATA ───
   /**
-   * Permite que el rastro del archivo binario del FormData pase la validación
-   * estricta de NestJS sin arrojar "should not exist".
+   * Soporte para la carga de archivos binarios mediante multipart/form-data.
+   * Evita fallos en la validación estricta de NestJS.
    */
   @IsOptional()
   foto_unidad?: any;

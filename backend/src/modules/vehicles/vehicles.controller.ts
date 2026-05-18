@@ -1,3 +1,5 @@
+// backend/src/modules/vehicles/vehicles.controller.ts
+
 import {
   Controller,
   Get,
@@ -19,30 +21,36 @@ export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
   /**
-   * Endpoint de Creación con soporte para archivos binarios.
+   * Registra un nuevo vehículo incluyendo el archivo binario de la foto.
    */
   @Post()
   @Roles('superAdmin', 'logístico')
   @UseInterceptors(FileInterceptor('foto_unidad'))
   create(
-    @Body() createVehiculoDto: CreateVehicleDto,
+    @Body() createVehicleDto: CreateVehicleDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.vehiclesService.create(createVehiculoDto, file);
+    return this.vehiclesService.create(createVehicleDto, file);
   }
 
+  /**
+   * Obtiene la lista completa de vehículos.
+   */
   @Get()
   findAll() {
     return this.vehiclesService.findAll();
   }
 
+  /**
+   * Obtiene la información detallada de un vehículo por su ID.
+   */
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.vehiclesService.findOne(id);
   }
 
   /**
-   * Endpoint de Actualización Parcial con soporte para sustitución de imagen.
+   * Actualiza los datos de un vehículo y maneja la sustitución opcional de su imagen.
    */
   @Patch(':id')
   @Roles('superAdmin', 'logístico')
@@ -55,6 +63,9 @@ export class VehiclesController {
     return this.vehiclesService.update(id, updateDto, file);
   }
 
+  /**
+   * Remueve de forma lógica o física un vehículo según su ID.
+   */
   @Delete(':id')
   @Roles('superAdmin')
   remove(@Param('id') id: string) {
