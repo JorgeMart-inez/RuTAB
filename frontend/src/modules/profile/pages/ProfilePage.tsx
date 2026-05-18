@@ -4,6 +4,8 @@ import { profileService } from "../services/profileService";
 import { User, Mail, Phone, Lock, Camera, Save, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { ImageCropperModal } from "../../../components/ui/ImageCropperModal";
+// Importamos el schema y el tipo que creamos en el paso anterior
+import { updateProfileSchema } from "../types/profile.types";
 
 export const ProfilePage = () => {
   const { usuario, updateUsuario } = useAuth();
@@ -11,16 +13,18 @@ export const ProfilePage = () => {
 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  // --- CAMBIO: Ahora guardamos el File crudo, no el string base64 ---
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
+  // Estado para capturar los datos del formulario
   const [formData, setFormData] = useState({
     nombre: usuario?.nombre || "",
     correo: usuario?.correo || "",
     telefono: usuario?.telefono || "",
     password: "",
   });
+
+  // NUEVO: Estado para almacenar los errores de validación por campo
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleApiError = (error: any, defaultMsg: string) => {
     const backendMessage = error.response?.data?.message;
@@ -34,30 +38,54 @@ export const ProfilePage = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Limpieza de errores en tiempo real mientras el usuario escribe
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const updateData: any = {};
-      if (formData.nombre.trim()) updateData.nombre = formData.nombre.trim();
-      if (formData.telefono?.trim())
-        updateData.telefono = formData.telefono.trim();
-      if (formData.correo.trim()) updateData.correo = formData.correo.trim();
-      if (formData.password) updateData.password = formData.password;
+    // 1. Ejecutamos la barrera de seguridad con Zod en el Frontend
+    const validation = updateProfileSchema.safeParse(formData);
 
-      if (!updateData.nombre) {
-        toast.error("El nombre es obligatorio");
-        setLoading(false);
-        return;
+    if (!validation.success) {
+      // Mapeamos los errores de Zod al estado local
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+
+      setErrors(fieldErrors);
+      toast.error("Por favor, corrige los campos marcados");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // 2. Extraemos los datos validados y limpios por Zod
+      const cleanData = { ...validation.data };
+
+      // Si la contraseña viene vacía, la eliminamos para que el backend no intente procesarla
+      if (!cleanData.password) {
+        delete cleanData.password;
       }
 
-      const updatedUser = await profileService.updateProfile(updateData);
+      const updatedUser = await profileService.updateProfile(cleanData);
       updateUsuario(updatedUser);
       setFormData((prev) => ({ ...prev, password: "" }));
+      setErrors({}); // Limpiamos cualquier error previo
       toast.success("Perfil actualizado correctamente");
     } catch (error: any) {
       handleApiError(error, "Error al actualizar los datos");
@@ -66,7 +94,6 @@ export const ProfilePage = () => {
     }
   };
 
-  // --- MEJORA: handleFileChange mucho más limpio ---
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -77,15 +104,12 @@ export const ProfilePage = () => {
       return;
     }
 
-    // Simplemente guardamos el archivo y el modal se abre
     setSelectedImageFile(file);
-
-    // Limpiamos el input para que permita subir la misma foto si se cancela
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleCropComplete = async (croppedFile: File) => {
-    setSelectedImageFile(null); // Cerramos el modal
+    setSelectedImageFile(null);
     setUploading(true);
     const toastId = toast.loading("Subiendo avatar optimizado...");
 
@@ -104,7 +128,6 @@ export const ProfilePage = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {/* --- MODAL ACTUALIZADO --- */}
       {selectedImageFile && (
         <ImageCropperModal
           isOpen={!!selectedImageFile}
@@ -123,6 +146,7 @@ export const ProfilePage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Sección de Tarjeta de Perfil */}
         <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="relative group">
             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-50 bg-gray-100 flex items-center justify-center">
@@ -163,18 +187,20 @@ export const ProfilePage = () => {
           </div>
         </div>
 
+        {/* Sección del Formulario */}
         <div className="md:col-span-2 space-y-6">
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100"
           >
-            {/* ... Resto del formulario igual ... */}
             <div className="p-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
                 <User size={20} className="text-blue-500" /> Información
                 Personal
               </h3>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Input: Nombre */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-600">
                     Nombre Completo
@@ -188,10 +214,21 @@ export const ProfilePage = () => {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                        errors.nombre
+                          ? "border-red-500 ring-1 ring-red-200"
+                          : "border-gray-200"
+                      }`}
                     />
                   </div>
+                  {errors.nombre && (
+                    <p className="text-xs font-medium text-red-500 mt-1">
+                      {errors.nombre}
+                    </p>
+                  )}
                 </div>
+
+                {/* Input: Teléfono */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-600">
                     Teléfono
@@ -205,10 +242,21 @@ export const ProfilePage = () => {
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                        errors.telefono
+                          ? "border-red-500 ring-1 ring-red-200"
+                          : "border-gray-200"
+                      }`}
                     />
                   </div>
+                  {errors.telefono && (
+                    <p className="text-xs font-medium text-red-500 mt-1">
+                      {errors.telefono}
+                    </p>
+                  )}
                 </div>
+
+                {/* Input: Correo */}
                 <div className="sm:col-span-2 space-y-1">
                   <label className="text-sm font-medium text-gray-600">
                     Correo Electrónico
@@ -223,13 +271,23 @@ export const ProfilePage = () => {
                       type="email"
                       value={formData.correo}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                        errors.correo
+                          ? "border-red-500 ring-1 ring-red-200"
+                          : "border-gray-200"
+                      }`}
                     />
                   </div>
+                  {errors.correo && (
+                    <p className="text-xs font-medium text-red-500 mt-1">
+                      {errors.correo}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* Sección: Seguridad */}
             <div className="p-6 space-y-4">
               <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
                 <Lock size={20} className="text-orange-500" /> Seguridad
@@ -248,13 +306,23 @@ export const ProfilePage = () => {
                     type="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all ${
+                      errors.password
+                        ? "border-red-500 ring-1 ring-red-200"
+                        : "border-gray-200"
+                    }`}
                     placeholder="Dejar en blanco para mantener actual"
                   />
                 </div>
+                {errors.password && (
+                  <p className="text-xs font-medium text-red-500 mt-1">
+                    {errors.password}
+                  </p>
+                )}
               </div>
             </div>
 
+            {/* Botón de Envíos */}
             <div className="p-6 bg-gray-50 flex justify-end">
               <button
                 type="submit"

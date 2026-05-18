@@ -1,21 +1,19 @@
 import { api } from "../../../config/api";
+// Importamos el tipo estricto derivado de Zod
+import { UpdateProfileInput } from "../types/profile.types";
 
 export const profileService = {
   /**
-   * Actualiza datos de texto (nombre, correo, password)
+   * Actualiza datos de texto (nombre, correo, password) garantizando
+   * que la estructura cumpla fielmente con las reglas de negocio.
    */
-  updateProfile: async (data: {
-    nombre?: string;
-    correo?: string;
-    telefono?: string;
-    password?: string;
-  }) => {
+  updateProfile: async (data: UpdateProfileInput) => {
     const response = await api.patch("/profile/update", data);
     return response.data;
   },
 
   /**
-   * Sube la imagen al servidor
+   * Sube la imagen del avatar optimizada al servidor utilizando FormData
    */
   uploadAvatar: async (file: File) => {
     const formData = new FormData();
