@@ -1,4 +1,4 @@
-// src/modules/vehicles/vehicles.controller.ts
+// backend/src/modules/vehicles/vehicles.controller.ts
 
 import {
   Controller,
@@ -8,34 +8,33 @@ import {
   Param,
   Delete,
   Patch,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 
-/**
- * Controlador de Gestión de Vehículos.
- * Provee la interfaz REST para el mantenimiento de la flota (CRUD).
- * Prefijo de ruta: /vehicles
- */
 @Controller('vehicles')
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
   /**
-   * Endpoint de Creación.
-   * * Acceso restringido: Solo perfiles con atribuciones de gestión operativa.
+   * Registra un nuevo vehículo incluyendo el archivo binario de la foto.
    */
   @Post()
   @Roles('superAdmin', 'logístico')
-  create(@Body() createVehiculoDto: CreateVehicleDto) {
-    return this.vehiclesService.create(createVehiculoDto);
+  @UseInterceptors(FileInterceptor('foto_unidad'))
+  create(
+    @Body() createVehicleDto: CreateVehicleDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.vehiclesService.create(createVehicleDto, file);
   }
 
   /**
-   * Endpoint de Consulta Global.
-   * * Acceso: Requiere token válido (heredado del Guard Global).
-   * Recupera el listado completo de unidades para su visualización en el panel.
+   * Obtiene la lista completa de vehículos.
    */
   @Get()
   findAll() {
@@ -43,8 +42,7 @@ export class VehiclesController {
   }
 
   /**
-   * Endpoint de Consulta Individual.
-   * @param id - Identificador único del vehículo.
+   * Obtiene la información detallada de un vehículo por su ID.
    */
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -52,21 +50,21 @@ export class VehiclesController {
   }
 
   /**
-   * Endpoint de Actualización Parcial (PATCH).
-   * * Acceso restringido: Permite modificar atributos específicos sin reescribir todo el objeto.
+   * Actualiza los datos de un vehículo y maneja la sustitución opcional de su imagen.
    */
   @Patch(':id')
   @Roles('superAdmin', 'logístico')
+  @UseInterceptors(FileInterceptor('foto_unidad'))
   update(
     @Param('id') id: string,
     @Body() updateDto: Partial<CreateVehicleDto>,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.vehiclesService.update(id, updateDto);
+    return this.vehiclesService.update(id, updateDto, file);
   }
 
   /**
-   * Endpoint de Eliminación.
-   * * Acceso crítico: Solo el nivel jerárquico más alto (superAdmin) puede remover unidades.
+   * Remueve de forma lógica o física un vehículo según su ID.
    */
   @Delete(':id')
   @Roles('superAdmin')

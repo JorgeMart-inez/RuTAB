@@ -1,43 +1,48 @@
-// src/modules/management/vehicles/vehicles.service.ts
+// frontend/src/modules/management/vehicles/vehicles.service.ts
 
 import { isAxiosError } from "axios";
 import { api } from "../../../config/api";
 import { VehicleFormData } from "./types";
 
-/** Punto de entrada principal para el recurso de vehículos en la API */
 const ENDPOINT = "/vehicles";
 
 /**
- * Procesador central de excepciones para respuestas de NestJS.
- * Normaliza errores de validación (class-validator) y códigos de estado HTTP
- * para convertirlos en mensajes legibles por la interfaz de usuario.
+ * Normaliza y gestiona las excepciones emitidas por el backend NestJS.
  */
-const handleNestError = (error: unknown) => {
+const handleNestError = (error: unknown): never => {
   if (isAxiosError(error) && error.response) {
     const data = error.response.data;
+    const status = error.response.status;
 
-    // NestJS puede devolver el mensaje en 'message' (array o string) o 'error'
-    const message = data.message || data.error || error.response.statusText;
-    const finalMessage = Array.isArray(message) ? message.join(", ") : message;
-
-    // Gestión específica para restricciones de Guardia (RBAC) o Policies
-    if (error.response.status === 403) {
+    if (status === 403) {
       throw new Error(
         "No tienes permisos suficientes para realizar esta acción.",
       );
     }
+    if (status === 409) {
+      throw new Error(
+        "Las placas ingresadas ya se encuentran registradas en el sistema.",
+      );
+    }
+    if (status === 404) {
+      throw new Error("El vehículo solicitado no existe o ya fue eliminado.");
+    }
+
+    const message = data?.message || data?.error || error.response.statusText;
+    const finalMessage = Array.isArray(message) ? message.join(", ") : message;
 
     throw new Error(finalMessage || "Error en la petición al servidor");
   }
-  throw new Error("Error de conexión con el servidor");
+
+  throw new Error(
+    "Error de conexión con el servidor. Por favor, verifica tu red.",
+  );
 };
 
-/**
- * Capa de servicio para operaciones CRUD de vehículos.
- * Implementa la comunicación asíncrona y la transformación de datos para el backend.
- */
 export const VehicleService = {
-  /** Recupera el listado completo de unidades registradas */
+  /**
+   * Obtiene el listado completo de vehículos.
+   */
   getAll: async () => {
     try {
       const { data } = await api.get(ENDPOINT);
@@ -47,16 +52,30 @@ export const VehicleService = {
     }
   },
 
-  /** * Registra una nueva unidad.
-   * Realiza el parseo del rendimiento a número decimal antes del envío.
+  /**
+   * Registra una nueva unidad con soporte multimedia.
    */
-  create: async (formData: VehicleFormData) => {
+  create: async (formData: VehicleFormData, fotoFile: File | null) => {
     try {
-      const { data } = await api.post(ENDPOINT, {
-        ...formData,
-        // Sincronización de tipo: el backend espera un float/number
-        rendimiento_combustible:
-          parseFloat(formData.rendimiento_combustible) || 0,
+      const dataPayload = new FormData();
+
+      dataPayload.append("placas", formData.placas.trim());
+      dataPayload.append("marca", formData.marca.trim());
+      dataPayload.append("modelo", formData.modelo.trim());
+      dataPayload.append("estatus", formData.estatus);
+      dataPayload.append(
+        "rendimiento_combustible",
+        (parseFloat(formData.rendimiento_combustible) || 0).toString(),
+      );
+
+      if (fotoFile) {
+        dataPayload.append("foto_unidad", fotoFile);
+      }
+
+      const { data } = await api.post(ENDPOINT, dataPayload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       return data;
     } catch (error) {
@@ -64,14 +83,34 @@ export const VehicleService = {
     }
   },
 
-  /** * Actualiza parcialmente un registro existente mediante PATCH.
+  /**
+   * Actualiza los datos de una unidad específica y/o reemplaza su imagen.
    */
-  update: async (id: string | number, formData: VehicleFormData) => {
+  update: async (
+    id: string | number,
+    formData: VehicleFormData,
+    fotoFile: File | null,
+  ) => {
     try {
-      const { data } = await api.patch(`${ENDPOINT}/${id}`, {
-        ...formData,
-        rendimiento_combustible:
-          parseFloat(formData.rendimiento_combustible) || 0,
+      const dataPayload = new FormData();
+
+      dataPayload.append("placas", formData.placas.trim());
+      dataPayload.append("marca", formData.marca.trim());
+      dataPayload.append("modelo", formData.modelo.trim());
+      dataPayload.append("estatus", formData.estatus);
+      dataPayload.append(
+        "rendimiento_combustible",
+        (parseFloat(formData.rendimiento_combustible) || 0).toString(),
+      );
+
+      if (fotoFile) {
+        dataPayload.append("foto_unidad", fotoFile);
+      }
+
+      const { data } = await api.patch(`${ENDPOINT}/${id}`, dataPayload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
       return data;
     } catch (error) {
@@ -79,7 +118,9 @@ export const VehicleService = {
     }
   },
 
-  /** Elimina un registro de vehículo del sistema */
+  /**
+   * Elimina un vehículo por su identificador único.
+   */
   delete: async (id: string | number) => {
     try {
       const { data } = await api.delete(`${ENDPOINT}/${id}`);

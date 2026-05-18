@@ -1,47 +1,70 @@
-// src/modules/management/vehicles/types.ts
+// frontend/src/modules/management/vehicles/types.ts
+
+import { z } from "zod";
 
 /**
- * Representación del modelo de datos de un vehículo.
- * Corresponde a la estructura almacenada en la base de datos (Prisma).
+ * Esquema de validación para el formulario de vehículos.
+ * Replica las reglas de negocio y restricciones del DTO del backend.
+ */
+export const vehicleFormSchema = z.object({
+  placas: z
+    .string()
+    .min(1, "Las placas son obligatorias")
+    .trim()
+    .regex(
+      /^[A-Z]{3}-[0-9]{3}-[A-Z]{1}$/,
+      "Formato de placa inválido (Ejemplo esperado: ABC-123-A)",
+    ),
+  marca: z.string().trim().optional().or(z.literal("")),
+  modelo: z.string().trim().optional().or(z.literal("")),
+  rendimiento_combustible: z
+    .string()
+    .trim()
+    .min(1, "El rendimiento es obligatorio")
+    .refine((val) => !isNaN(parseFloat(val)), {
+      message: "Debe ser un número válido (ej. 15.5)",
+    })
+    .refine((val) => parseFloat(val) > 0, {
+      message: "El rendimiento debe ser un valor mayor a 0",
+    }),
+  estatus: z.string().default("disponible"),
+  foto_unidad_url: z.string().optional().nullable(),
+});
+
+export type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
+
+/**
+ * Representación del modelo de datos de un vehículo (Estructura de persistencia).
  */
 export interface Vehicle {
-  /** Identificador único (UUID) */
   id: string;
-  /** Identificación oficial de la unidad */
   placas: string;
-  /** Fabricante del vehículo */
   marca: string;
-  /** Línea o versión específica del vehículo */
   modelo: string;
-  /** Eficiencia de consumo expresada en km/l */
   rendimiento_combustible: number;
-  /** Estado operativo actual (ej. 'disponible', 'mantenimiento', 'en_ruta') */
   estatus: string;
+  foto_unidad_url?: string | null;
 }
 
 /**
- * Estructura de datos para la gestión de estados en formularios.
- * Los campos numéricos se definen como string para facilitar la vinculación (binding) con inputs de texto.
+ * Estructura para el estado interno del formulario.
+ * Mantiene tipos basados en strings para facilitar el binding con inputs HTML.
  */
 export interface VehicleFormData {
   placas: string;
   marca: string;
   modelo: string;
-  /** Valor temporal en string antes de ser parseado a número para la API */
   rendimiento_combustible: string;
   estatus: string;
+  foto_unidad_url?: string | null;
 }
 
 /**
- * Definición de propiedades para el componente de modal de formulario.
+ * Propiedades del componente del formulario de vehículos.
  */
 export interface VehicleFormProps {
-  /** Control de visibilidad del modal */
   isOpen: boolean;
-  /** Callback para solicitar el cierre del modal */
   onClose: () => void;
-  /** Callback ejecutado tras una operación de persistencia exitosa */
   onSuccess: () => void;
-  /** Datos del vehículo en modo edición; si es null/undefined, el modo es 'Creación' */
   vehicle?: Vehicle | null;
 }
