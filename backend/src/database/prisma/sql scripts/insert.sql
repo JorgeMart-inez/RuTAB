@@ -133,3 +133,75 @@ SELECT
     np.id, 
     row_number() OVER () -- Genera el orden 1, 2, 3, 4 automáticamente
 FROM nuevos_pedidos np;
+
+
+-- ============= QUERYS PARA LA PRESENTACIÓN =============
+WITH diez_clientes_agro AS (
+    -- 1. Insertamos 10 clientes usando ST_GeographyFromText para el tipo 'geography'
+    INSERT INTO clientes (nombre, telefono, direccion, correo, coordenadas, codigo, contacto, estatus)
+    VALUES 
+        ('Agroinsumos del Sureste S.A.', '9933152431', 'Carr. Circuito del Golfo Km 15, Villahermosa', 'compras@agrosureste.com', ST_GeographyFromText('POINT(-93.0012 17.9845)'), 'CLI-AG01', 'Ing. Carlos Mendoza', 'Activo'),
+        ('Cooperativa Ganadera de Tabasco', '9341028492', 'Av. Altiplano 402, Tenosique', 'logistica@coopgatab.org', ST_GeographyFromText('POINT(-91.4234 17.4756)'), 'CLI-AG02', 'Lic. Sofía Leyva', 'Activo'),
+        ('Distribuidora FertiMax', '9143341205', 'Calle Melchor Ocampo 112, Cárdenas', 'proveedores@fertimax.mx', ST_GeographyFromText('POINT(-93.3667 17.9833)'), 'CLI-AG03', 'Roberto Gómez', 'Activo'),
+        ('Nutrición Animal El Ganadero', '9171059382', 'Periférico Carlos Pellicer 240, Macuspana', 'ventas@nutriganadero.com', ST_GeographyFromText('POINT(-92.5921 17.7612)'), 'CLI-AG04', 'MVZ. Jaime Peralta', 'Activo'),
+        ('Finca El Eden Agropecuaria', '9321048291', 'Rancho El Eden S/N, Teapa', 'administracion@eleden.com', ST_GeographyFromText('POINT(-92.9514 17.5489)'), 'CLI-AG05', 'Don Arturo Silva', 'Activo'),
+        ('Sistemas de Riego Tecnificados', '9931023948', 'Zona Industrial Manzana 4, Villahermosa', 'proyectos@riegotec.mx', ST_GeographyFromText('POINT(-92.9167 17.9889)'), 'CLI-AG06', 'Ing. Miguel Ángel Ruiz', 'Activo'),
+        ('Agroquímicos y Semillas del Centro', '9333241590', 'Blvd. Francisco I. Madero, Comalcalco', 'contacto@agrosecent.com', ST_GeographyFromText('POINT(-93.2264 18.2653)'), 'CLI-AG07', 'Patricia Juárez', 'Activo'),
+        ('Productora de Cacao OrganiK', '9331120495', 'Carr. Federal Cunduacán-Comalcalco Km 5, Cunduacán', 'almacen@organikcacao.com', ST_GeographyFromText('POINT(-93.1678 18.0645)'), 'CLI-AG08', 'Francisco Hernández', 'Activo'),
+        ('Silos y Granos Grijalva', '9933556677', 'Km 8 Carr. a Frontera, Centro', 'bascula@silosgrijalva.com', ST_GeographyFromText('POINT(-92.8521 18.0412)'), 'CLI-AG09', 'Ing. Fernando Ortiz', 'Activo'),
+        ('Suministros Agrícolas de Los Ríos', '9341142233', 'Calle Pochutla S/N, Balancán', 'compras@sumisrios.com', ST_GeographyFromText('POINT(-91.5312 17.7945)'), 'CLI-AG10', 'Ramón Valenzuela', 'Activo')
+    RETURNING id, nombre
+),
+pares_de_pedidos AS (
+    -- 2. Mapeamos cada cliente con sus 2 tipos de carga
+    SELECT 
+        c.id AS cliente_id,
+        p.descrip,
+        p.indice_pedido
+    FROM diez_clientes_agro c
+    CROSS JOIN LATERAL (
+        VALUES 
+            ('Tarimas de Fertilizante NPK (Nitrógeno, Fósforo, Potasio) - 50 bultos de 25kg', 1),
+            ('Contenedores de Alimento Balanceado para Ganado Bovino (Etapa Engorda)', 2)
+    ) AS p(descrip, indice_pedido)
+),
+veinte_pedidos_agro AS (
+    -- 3. Insertamos los 20 pedidos
+    INSERT INTO pedidos (cliente_id, descripcion_carga, codigo_rastreo, estado_pedido)
+    SELECT 
+        p.cliente_id,
+        p.descrip,
+        'PED-AGRO-' || UPPER(SUBSTRING(gen_random_uuid()::text, 1, 6)) || '-' || p.indice_pedido,
+        'pendiente'
+    FROM pares_de_pedidos p
+    RETURNING id
+),
+nueva_ruta_distribucion AS (
+    -- 4. Creamos la ruta maestra
+    INSERT INTO rutas (
+        vehiculo_id, 
+        chofer_id, 
+        creado_por, 
+        codigo_rastreo, 
+        fecha_programada, 
+        distancia_total_estimada, 
+        estatus_ruta
+    )
+    VALUES (
+        '1477ef3d-176e-4cd8-b3b6-8fd14c23e576', -- Vehiculo
+        'bec40ffe-3442-4599-80af-630096938689', -- Chofer
+        '9fab2137-130f-4b1c-adf2-09651727a60c', -- Administrador
+        'RUTA-AGRO-' || UPPER(SUBSTRING(gen_random_uuid()::text, 1, 8)), 
+        CURRENT_DATE, 
+        0, 
+        'borrador'
+    )
+    RETURNING id
+)
+-- 5. Vinculamos de manera secuencial los 20 pedidos en detalles_ruta
+INSERT INTO detalles_ruta (ruta_id, pedido_id, orden_entrega)
+SELECT 
+    (SELECT id FROM nueva_ruta_distribucion), 
+    vpa.id, 
+    ROW_NUMBER() OVER ()
+FROM veinte_pedidos_agro vpa;
