@@ -23,8 +23,8 @@ export class DashboardService {
         _count: true,
       }),
       this.prisma.incidencias.findMany({
-        where: { updated_at: { gte: today } },
-        orderBy: { updated_at: 'desc' }, // VITAL: Muestra lo más nuevo primero
+        where: { created_at: { gte: today } },
+        orderBy: { created_at: 'desc' }, // VITAL: Muestra lo más nuevo primero
         include: {
           rutas: { include: { vehiculos: true } },
         },
@@ -98,32 +98,34 @@ export class DashboardService {
   }
 
   async getWeeklyStats() {
-    const last7Days: any[] = [];
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
+    const todayUtc = new Date();
+    todayUtc.setUTCHours(0, 0, 0, 0);
+    const weekday = todayUtc.getUTCDay();
+    const mondayOffset = (weekday + 6) % 7; // 0 => Sunday -> 6, 1 => Monday -> 0
+    const weekStart = new Date(todayUtc);
+    weekStart.setUTCDate(weekStart.getUTCDate() - mondayOffset);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekStart.getUTCDate() + 7);
 
-    // Generamos los últimos 7 días para asegurar que la gráfica no tenga huecos
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
+    const last7Days: any[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setUTCDate(weekStart.getUTCDate() + i);
       last7Days.push({
         fecha: date.toISOString().split('T')[0],
-        nombreDia: date.toLocaleDateString('es-MX', { weekday: 'short' }),
+        nombreDia: date.toLocaleDateString('es-MX', { weekday: 'short', timeZone: 'UTC' }),
         entregados: 0,
-        fallidos: 0
+        fallidos: 0,
       });
     }
-
-    const startOfRange = new Date(today);
-    startOfRange.setDate(startOfRange.getDate() - 6);
 
     // Consultamos la DB para obtener los conteos agrupados por día
     const stats = await this.prisma.pedidos.groupBy({
       by: ['created_at', 'estado_pedido'],
       where: {
-        created_at: { gte: startOfRange }
+        created_at: { gte: weekStart, lt: weekEnd },
       },
-      _count: true
+      _count: true,
     });
 
     // Mapeamos los resultados de Prisma a nuestro array de 7 días
@@ -144,12 +146,21 @@ export class DashboardService {
   }
 
   async getTopPerformers() { // Este método es para obtener los mejores choferes, unidades o incidencias más comunes de la semana
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const todayUtc = new Date();
+    todayUtc.setUTCHours(0, 0, 0, 0);
+    const weekday = todayUtc.getUTCDay();
+    const mondayOffset = (weekday + 6) % 7;
+    const weekStart = new Date(todayUtc);
+    weekStart.setUTCDate(weekStart.getUTCDate() - mondayOffset);
 
-    // Traemos los detalles de rutas asociados a pedidos creados en los últimos 7 días
+    // Traemos los detalles de rutas asociados a pedidos entregados creados en la semana actual (UTC)
     const detalles = await this.prisma.detalles_ruta.findMany({
-      where: { pedidos: { created_at: { gte: sevenDaysAgo } } },
+      where: {
+        pedidos: {
+          created_at: { gte: weekStart },
+          estado_pedido: 'entregado',
+        },
+      },
       include: {
         rutas: { include: { choferes: true, vehiculos: true } },
         pedidos: true,
@@ -178,15 +189,18 @@ export class DashboardService {
     const bestChoferEntry = Object.values(choferCounts).sort((a, b) => b.count - a.count)[0];
     const bestUnitEntry = Object.values(unitCounts).sort((a, b) => b.count - a.count)[0];
 
-    // Calculamos la incidencia más frecuente en los últimos 7 días
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekStart.getUTCDate() + 7);
+
+    // Calculamos la incidencia más frecuente en la semana actual (UTC)
     const incidencias = await this.prisma.incidencias.findMany({
-      where: { created_at: { gte: sevenDaysAgo } },
-      select: { descripcion: true },
+      where: { created_at: { gte: weekStart, lt: weekEnd } },
+      select: { categoria: true },
     });
 
     const incCounts: Record<string, number> = {};
     incidencias.forEach((i) => {
-      const key = i.descripcion || 'Sin descripción';
+      const key = i.categoria || 'Sin categoría';
       incCounts[key] = (incCounts[key] || 0) + 1;
     });
 

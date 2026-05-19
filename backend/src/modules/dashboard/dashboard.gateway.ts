@@ -63,11 +63,12 @@ export class DashboardGateway implements OnGatewayConnection, OnGatewayDisconnec
    * Se llama cada vez que algo cambia en la base de datos (pedidos, rutas, incidencias).
    */
   async emitDashboardUpdate() {
+    const todayUtc = new Date();
+    todayUtc.setUTCHours(0, 0, 0, 0);
+
     const incidencias = await this.prisma.incidencias.findMany({
       where: {
-        rutas: {
-          estatus_ruta: 'en_proceso',
-        },
+        created_at: { gte: todayUtc },
       },
       include: {
         rutas: {
@@ -103,11 +104,12 @@ export class DashboardGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   async emitUpdate() {
+    const todayUtc = new Date();
+    todayUtc.setUTCHours(0, 0, 0, 0);
+
     const incidencias = await this.prisma.incidencias.findMany({
       where: {
-        rutas: {
-          estatus_ruta: 'en_proceso',
-        },
+        created_at: { gte: todayUtc },
       },
       include: {
         rutas: {
