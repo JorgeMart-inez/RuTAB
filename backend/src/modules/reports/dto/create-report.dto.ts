@@ -3,6 +3,7 @@ import { IsEnum, IsOptional, IsDateString, IsString } from 'class-validator';
 
 export enum ReportPeriod {
   LAST_WEEK = 'last-week',
+  THIS_WEEK = 'this-week',
   TWO_WEEKS = 'two-weeks',
   THIS_MONTH = 'this-month',
   CUSTOM = 'custom'

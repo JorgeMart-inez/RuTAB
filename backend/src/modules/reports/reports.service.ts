@@ -1,6 +1,6 @@
 // src/modules/reports/reports.service.ts
 import { Injectable } from '@nestjs/common';
-import { startOfMonth, endOfMonth, subWeeks, startOfWeek, endOfWeek } from 'date-fns';
+import { startOfMonth, endOfMonth, subWeeks, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { ReportService as PdfService } from '../dashboard/report.service';
 import * as fs from 'fs';
@@ -45,18 +45,60 @@ export class ReportsService {
     }
 
     private async getDataForReport(start: Date, end: Date) {
-        const result = await this.prisma.$queryRaw`
-            SELECT 
-                to_char(created_at, 'Dy') as "nombreDia",
-                date(created_at) as "fecha",
-                count(*) filter (where estado_pedido = 'ENTREGADO') as "entregados",
-                count(*) filter (where estado_pedido = 'FALLIDO') as "fallidos"
+        const dailyRange: Array<{ fecha: string; nombreDia: string }> = [];
+        const currentDate = new Date(start);
+
+        while (currentDate <= end) {
+            dailyRange.push({
+                fecha: currentDate.toISOString().split('T')[0],
+                nombreDia: currentDate.toLocaleDateString('es-MX', { weekday: 'short' }),
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        const pedidosResult = await this.prisma.$queryRaw`
+            SELECT
+                date(created_at) AS fecha,
+                count(*) FILTER (WHERE lower(estado_pedido) = 'entregado') AS "entregados",
+                count(*) FILTER (WHERE lower(estado_pedido) IN ('fallido', 'cancelado')) AS "fallidos"
             FROM pedidos
             WHERE created_at BETWEEN ${start} AND ${end}
-            GROUP BY 1, 2
-            ORDER BY 2 ASC
+            GROUP BY 1
+            ORDER BY 1 ASC
         `;
-        return (result as any[]) || [];
+
+        const incidenciasResult = await this.prisma.$queryRaw`
+            SELECT
+                date(created_at) as fecha,
+                count(*) as "incidencias"
+            FROM incidencias
+            WHERE created_at BETWEEN ${start} AND ${end}
+            GROUP BY 1
+            ORDER BY 1 ASC
+        `;
+
+        const pedidosMap = (pedidosResult as any[]).reduce((acc, item) => {
+            const fechaKey = item.fecha instanceof Date ? item.fecha.toISOString().split('T')[0] : item.fecha;
+            acc[fechaKey] = item;
+            return acc;
+        }, {} as Record<string, any>);
+
+        const incidenciasMap = (incidenciasResult as any[]).reduce((acc, item) => {
+            const fechaKey = item.fecha instanceof Date ? item.fecha.toISOString().split('T')[0] : item.fecha;
+            acc[fechaKey] = Number(item.incidencias || 0);
+            return acc;
+        }, {} as Record<string, number>);
+
+        return dailyRange.map((day) => {
+            const raw = pedidosMap[day.fecha] || {};
+            return {
+                fecha: day.fecha,
+                nombreDia: day.nombreDia,
+                entregados: Number(raw.entregados || 0),
+                fallidos: Number(raw.fallidos || 0),
+                incidencias: incidenciasMap[day.fecha] || 0,
+            };
+        });
     }
 
     private calculateRange(period: string, start?: string, end?: string) {
@@ -64,13 +106,15 @@ export class ReportsService {
         switch (period) {
             case 'last-week':
                 const lw = subWeeks(now, 1);
-                return { start: startOfWeek(lw), end: endOfWeek(lw) };
+                return { start: startOfWeek(lw, { weekStartsOn: 1 }), end: endOfWeek(lw, { weekStartsOn: 1 }) };
+            case 'this-week':
+                return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
             case 'two-weeks':
                 return { start: subWeeks(now, 2), end: now };
             case 'this-month':
                 return { start: startOfMonth(now), end: endOfMonth(now) };
             case 'custom':
-                return { start: new Date(start!), end: new Date(end!) };
+                return { start: new Date(start!), end: endOfDay(new Date(end!)) };
             default:
                 return { start: now, end: now };
         }

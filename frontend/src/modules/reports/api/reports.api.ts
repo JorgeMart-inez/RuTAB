@@ -25,6 +25,9 @@ export const reportsApi = {
 
   // Descargar un reporte ya existente en el server
   downloadExisting: (fileUrl: string) => {
-    window.open(`http://localhost:3000/${fileUrl}`, '_blank');
+    const normalizedFileUrl = fileUrl.startsWith('/') ? fileUrl.slice(1) : fileUrl;
+    const backendBase = api.defaults.baseURL || window.location.origin;
+    const downloadUrl = new URL(normalizedFileUrl, backendBase).toString();
+    window.open(downloadUrl, '_blank');
   }
 };
