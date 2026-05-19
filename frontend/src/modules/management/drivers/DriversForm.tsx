@@ -125,15 +125,17 @@ export const DriversForm: React.FC<DriverProps> = ({
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
                   Tipo de Licencia *
                 </label>
-                <input
+                <select
                   required
-                  type="text"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-slate-800"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-slate-800 bg-white"
                   value={formData.licencia || ""}
                   onChange={(e) => handleChange("licencia", e.target.value)}
-                  placeholder="Ej. A3"
                   disabled={isLoading}
-                />
+                >
+                  <option value="" disabled>Elige una Opción</option>
+                  <option value="Chofer">Chofer</option>
+                  <option value="Automovilista">Automovilista</option>
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
@@ -147,6 +149,7 @@ export const DriversForm: React.FC<DriverProps> = ({
                   onChange={(e) => handleChange("password", e.target.value)}
                   placeholder={driver ? "Dejar en blanco..." : "*******"}
                   disabled={isLoading}
+                  autoComplete="off"
                 />
               </div>
             </div>

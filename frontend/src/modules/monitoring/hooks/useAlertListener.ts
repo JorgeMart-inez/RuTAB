@@ -14,7 +14,7 @@ export const useAlertListener = () => {
         };
 
         socket.on('dashboard:update', handleUpdate);
-    socket.on('dashboard:initialData', handleUpdate);
+        socket.on('dashboard:initialData', handleUpdate);
 
         if (socket.connected) { // Si ya estamos conectados, solicitamos la data inicial
             socket.emit('getInitialData');
@@ -26,6 +26,7 @@ export const useAlertListener = () => {
 
         return () => { // Limpiamos los listeners al desmontar
             socket.off('dashboard:update', handleUpdate);
+            socket.off('dashboard:initialData', handleUpdate);
             socket.off('connect');
         };
 

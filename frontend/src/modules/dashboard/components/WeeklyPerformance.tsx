@@ -6,11 +6,12 @@ const CustomTooltip = ({ active, payload }: any) => {
 
   const item = payload[0]?.payload;
   const fechaTexto = item?.fecha
-    ? new Date(item.fecha).toLocaleDateString('es-MX', {
+    ? new Date(`${item.fecha}T00:00:00Z`).toLocaleDateString('es-MX', {
         weekday: 'short',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
+        timeZone: 'UTC',
       })
     : null;
 
@@ -18,8 +19,10 @@ const CustomTooltip = ({ active, payload }: any) => {
     <div className="bg-white p-3 rounded-2xl shadow-lg border border-slate-200">
       <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400">
         {item?.nombreDia?.toUpperCase()}
-        {fechaTexto ? ` · ${fechaTexto}` : ''}
       </p>
+      {fechaTexto && (
+        <p className="text-[10px] text-slate-400 mt-1">{fechaTexto}</p>
+      )}
       <div className="mt-2 text-slate-800 text-sm font-bold space-y-1">
         <p className='text-sm font-black text-green-400 uppercase tracking-tighter'>Entregados: {payload.find((p: any) => p.dataKey === 'entregados')?.value ?? 0}</p>
         <p className='text-sm font-black text-red-400 uppercase tracking-tighter'>Fallidos: {payload.find((p: any) => p.dataKey === 'fallidos')?.value ?? 0}</p>
@@ -30,7 +33,29 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 export const WeeklyPerformance = ({ data }: any) => {
   const hasData = Array.isArray(data) && data.length > 0;
-  const chartData = hasData ? data : [];
+  const weekdayOrder = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'];
+  const normalizeDay = (value?: string) =>
+    (value || '')
+      .toUpperCase()
+      .replace(/Á/g, 'A')
+      .replace(/É/g, 'E')
+      .replace(/Í/g, 'I')
+      .replace(/Ó/g, 'O')
+      .replace(/Ú/g, 'U');
+
+  const chartData = hasData
+    ? [...data].sort((a, b) => {
+        const first = normalizeDay(a?.nombreDia);
+        const second = normalizeDay(b?.nombreDia);
+        const posA = weekdayOrder.indexOf(first);
+        const posB = weekdayOrder.indexOf(second);
+
+        if (posA === posB) return (a?.fecha || '').localeCompare(b?.fecha || '');
+        if (posA === -1) return 1;
+        if (posB === -1) return -1;
+        return posA - posB;
+      })
+    : [];
 
   return (
     <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm h-[350px]">

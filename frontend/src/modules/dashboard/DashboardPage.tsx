@@ -13,7 +13,7 @@ import { WeeklyPerformance } from "./components/WeeklyPerformance";
 import { MiniStats } from "./components/MiniStats";
 
 export const DashboardPage: React.FC = () => {
-  const { stats, operations, isLoading, weeklyData, topData } = useDashboard();
+  const { stats, operations, isLoading, weeklyData, topData, rawIncidencias } = useDashboard();
 
   if (isLoading) return <div>Cargando centro de mando...</div>;
   {
@@ -58,7 +58,11 @@ export const DashboardPage: React.FC = () => {
       <StatsGrid stats={stats} />
 
       <div className="mt-8">
-        <IncidentMonitor data={stats?.monitorIncidencias} />
+        <IncidentMonitor data={rawIncidencias?.length ? {
+            camino: rawIncidencias.filter((i: any) => i.categoria === 'camino'),
+            entrega: rawIncidencias.filter((i: any) => i.categoria === 'entrega'),
+            tiempo: rawIncidencias.filter((i: any) => i.categoria === 'tiempo'),
+          } : stats?.monitorIncidencias} />
         <br></br>
       </div>
 

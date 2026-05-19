@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useSocket } from '../../../context/SocketContext';
 import { DashboardStats, ActiveOperation } from '../types';
 
 export interface WeeklyStat { // Nueva interfaz para datos históricos
@@ -10,49 +10,57 @@ export interface WeeklyStat { // Nueva interfaz para datos históricos
 }
 
 export const useDashboard = () => {
+  const { socket } = useSocket();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [operations, setOperations] = useState<ActiveOperation[]>([]);
   const [weeklyData, setWeeklyData] = useState<WeeklyStat[]>([]);
   const [topData, setTopData] = useState<any>(null);
+  const [rawIncidencias, setRawIncidencias] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Conexión al namespace específico
-    const socket: Socket = io('http://localhost:3000/dashboard', {
-        transports: ['websocket'],
-        upgrade: false,
-    });
+    if (!socket) return;
 
-    // PETICIÓN INICIAL: Pedimos los datos actuales apenas nos conectamos (no vemos vacío el dashboard)
-    socket.emit('getInitialData'); 
-
-    // EVENTOS: Escuchamos tanto el inicio como las actualizaciones
-    socket.on('dashboard:initialData', (data: { stats: DashboardStats, operacion: ActiveOperation[], weekly: WeeklyStat[], topData: any }) => {
+    const handleInitial = (data: { stats: DashboardStats; operacion: ActiveOperation[]; weekly: WeeklyStat[]; topData: any; rawIncidencias?: any[] }) => {
       setStats(data.stats);
       setOperations(data.operacion);
       setWeeklyData(data.weekly);
       setTopData(data.topData);
+      if (data.rawIncidencias) setRawIncidencias(data.rawIncidencias);
+      setIsLoading(false);
+    };
+
+    const handleUpdate = (data: { stats: DashboardStats; operacion: ActiveOperation[]; weekly: WeeklyStat[]; topData: any; rawIncidencias?: any[] }) => {
+      setStats(data.stats);
+      setOperations(data.operacion);
+      setWeeklyData(data.weekly);
+      setTopData(data.topData);
+      if (data.rawIncidencias) setRawIncidencias(data.rawIncidencias);
+    };
+
+    socket.on('dashboard:initialData', handleInitial);
+    socket.on('dashboard:update', handleUpdate);
+
+    if (socket.connected) {
+      socket.emit('getInitialData');
+    }
+
+    socket.on('connect', () => {
+      socket.emit('getInitialData');
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('Error de conexión en Centro de Mando:', err.message);
       setIsLoading(false);
     });
 
-    socket.on('dashboard:update', (data: { stats: DashboardStats, operacion: ActiveOperation[], weekly: WeeklyStat[], topData: any }) => {
-      setStats(data.stats);
-      setOperations(data.operacion);
-      setWeeklyData(data.weekly);
-      setTopData(data.topData);
-      // No necesitamos setear isLoading aquí porque ya cargó inicialmente
-    });
-
-    // Manejo de errores de conexión 
-    socket.on('connect_error', (err) => {
-      console.error('Error de conexión en Centro de Mando:', err.message);
-      setIsLoading(false); 
-    });
-
     return () => {
-      socket.disconnect();
+      socket.off('dashboard:initialData', handleInitial);
+      socket.off('dashboard:update', handleUpdate);
+      socket.off('connect');
+      socket.off('connect_error');
     };
-  }, []);
+  }, [socket]);
 
-  return { stats, operations, isLoading, weeklyData, topData };
+  return { stats, operations, isLoading, weeklyData, topData, rawIncidencias };
 };
