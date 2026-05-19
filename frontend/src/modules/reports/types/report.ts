@@ -1,4 +1,4 @@
-export type ReportPeriod = 'last-week' | 'two-weeks' | 'this-month' | 'custom';
+export type ReportPeriod = 'last-week' | 'this-week' | 'two-weeks' | 'this-month' | 'custom';
 
 export interface GeneratedReport {
   id: string;

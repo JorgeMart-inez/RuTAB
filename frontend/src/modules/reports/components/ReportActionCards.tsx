@@ -20,6 +20,18 @@ export const ReportActionCards = ({ onGenerate }: Props) => {
       )
     },
     {
+      id: 'this-week' as ReportPeriod,
+      title: 'Esta Semana',
+      description: 'Resumen actual de lunes a domingo con detalle diario.',
+      color: 'border-emerald-500',
+      bgColor: 'hover:bg-emerald-50',
+      icon: (
+        <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+        </svg>
+      )
+    },
+    {
       id: 'two-weeks' as ReportPeriod,
       title: 'Últimas 2 Semanas',
       description: 'Tendencias de rendimiento y logística de los últimos 14 días.',

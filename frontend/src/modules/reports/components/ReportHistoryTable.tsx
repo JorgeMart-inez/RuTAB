@@ -25,13 +25,16 @@ export const ReportHistoryTable = ({ history, onDownload }: Props) => {
                 <p className="text-xs text-slate-400">ID: {report.id.substring(0, 8)}</p>
               </td>
               <td className="p-4">
-                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold uppercase">
-                  {/* r.type es el mapeado, r.periods es el crudo de la DB */}
+                <p className="font-medium text-slate-800 uppercase tracking-wider text-xs">
                   {report.type || (report as any).periods || 'N/A'}
-                </span>
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {report.startDate && report.endDate
+                    ? `${new Date(report.startDate).toLocaleDateString()} - ${new Date(report.endDate).toLocaleDateString()}`
+                    : 'Rango no disponible'}
+                </p>
               </td>
               <td className="p-4 text-slate-600 text-sm">
-                {/* Verificamos si existe alguna de las dos variantes antes de crear la fecha */}
                 {report.createdAt || (report as any).createdat
                   ? new Date(report.createdAt || (report as any).createdat).toLocaleString()
                   : 'Fecha no disponible'}
