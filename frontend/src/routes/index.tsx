@@ -120,7 +120,7 @@ export const AppRoutes = () => {
           <Route
             path="inicio"
             element={
-              <RoleGuard allowedRoles={["superAdmin", "logístico", "auditor"]}>
+              <RoleGuard allowedRoles={["superAdmin", "logístico"]}>
                 <DashboardPage />
               </RoleGuard>
             }
