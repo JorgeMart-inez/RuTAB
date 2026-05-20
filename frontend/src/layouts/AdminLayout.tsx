@@ -12,11 +12,11 @@ export const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-neutral-100">
-      {/* Barra Lateral - Añadido z-40 para que los tooltips se vean sobre el main */}
+      {/* Barra Lateral - Posición fija y 100vh */}
       <aside
         className={`${
           isCollapsed ? "w-20" : "w-[260px]"
-        } bg-neutral-900 text-neutral-50 flex flex-col shadow-lg shrink-0 transition-all duration-300 relative z-40`}
+        } bg-neutral-900 text-neutral-50 flex flex-col shadow-lg shrink-0 transition-all duration-300 fixed left-0 top-0 h-screen z-40`}
       >
         {/* Botón para colapsar/expandir - Sin cambios en funcionalidad */}
         <button
@@ -43,9 +43,9 @@ export const AdminLayout = () => {
           )}
         </div>
 
-        {/* Navegación - Ajustado overflow para permitir ver tooltips */}
+        {/* Navegación - Ajustado overflow para permitir ver tooltips y flex-1 para ocupar espacio */}
         <nav
-          className={`flex-1 p-4 space-y-2 ${isCollapsed ? "overflow-visible" : "overflow-y-auto"}`}
+          className={`flex-1 p-4 space-y-2 sidebar-scrollbar ${isCollapsed ? "overflow-visible" : "overflow-y-auto"}`}
         >
           {menuConfig.map((item, index) => (
             <SidebarItem
@@ -70,6 +70,13 @@ export const AdminLayout = () => {
           </button>
         </div>
       </aside>
+
+      {/* Espaciador para el sidebar fijo */}
+      <div
+        className={`${
+          isCollapsed ? "w-20" : "w-[260px]"
+        } shrink-0 transition-all duration-300`}
+      ></div>
 
       {/* Contenedor de Contenido Principal */}
       <main className="flex-1 bg-white text-neutral-950 m-4 p-8 rounded-2xl shadow-sm overflow-y-auto relative z-0">

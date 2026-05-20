@@ -41,7 +41,8 @@ export const ReportHistoryTable = ({ history, onDownload }: Props) => {
               </td>
               <td className="p-4 text-center">
                 <button
-                  onClick={() => onDownload(report.fileUrl)}
+                  //onClick={() => onDownload(report.fileUrl)}
+                  onClick={() => alert("IMPORTANTE: Esta función no se encuentra disponible en local.")}
                   className="text-amber-600 hover:text-amber-700 font-bold text-sm"
                 >
                   Descargar PDF

@@ -93,46 +93,58 @@ OFFSET 30 LIMIT 30;
 
 COMMIT;
 
--- QUERY MAESTRA
-WITH nueva_ruta AS (
-    -- 1. Creamos la ruta y recuperamos su ID
-    INSERT INTO rutas (vehiculo_id, chofer_id, creado_por, fecha_programada, distancia_total_estimada, estatus_ruta)
-    VALUES (
-        'ffc4277e-a23b-4647-b9b5-6964fc2a776d', -- vehiculo
-        '8953817d-eb6e-4bf3-85b8-c6a48cf67072', -- chofer
-        '9fab2137-130f-4b1c-adf2-09651727a60c', -- admin
-        CURRENT_DATE + INTERVAL '1 day', 
-        0, 
-        'borrador'
-    )
-    RETURNING id
-),
-clientes_seleccionados AS (
-    -- 2. Buscamos los UUIDs de dos clientes existentes (puedes ajustar el LIMIT o los nombres)
-    SELECT id FROM clientes LIMIT 2
+-- ========== QUERY MAESTRA VERSION 2.0 ==========
+WITH clientes_seleccionados AS (
+    -- Limitamos la cantidad de clientes a usar
+    SELECT id 
+    FROM clientes 
+    LIMIT 3
 ),
 nuevos_pedidos AS (
-    -- 3. Creamos 2 pedidos por cada cliente encontrado (4 en total)
-    -- Usamos CROSS JOIN para emparejar los clientes con datos estáticos
+    -- Creamos 2 pedidos por cada cliente seleccionado
     INSERT INTO pedidos (cliente_id, descripcion_carga, codigo_rastreo, estado_pedido)
     SELECT 
         c.id, 
         p.descrip, 
-        'RT-' || floor(random() * 10000)::text, 
+        'PED-' || UPPER(SUBSTRING(gen_random_uuid()::text, 1, 8)),
         'pendiente'
     FROM clientes_seleccionados c
     CROSS JOIN (
-        VALUES ('Carga General A'), ('Carga General B')
+        VALUES ('Carga General A'), ('Carga General B') -- Aquí defines los 2 pedidos por cliente
     ) AS p(descrip)
-    RETURNING id
+    RETURNING id  -- Retornamos los IDs de los pedidos creados
+),
+nueva_ruta AS (
+    -- Creamos la ruta que agrupará estos pedidos
+    INSERT INTO rutas (
+        vehiculo_id, 
+        chofer_id, 
+        creado_por, 
+        codigo_rastreo, 
+        fecha_programada, 
+        distancia_total_estimada, 
+        estatus_ruta
+    )
+    VALUES (
+        '1477ef3d-176e-4cd8-b3b6-8fd14c23e576', -- Vehiculo
+        'bec40ffe-3442-4599-80af-630096938689', -- Chofer
+        '9fab2137-130f-4b1c-adf2-09651727a60c', -- Admin
+        'RUTA-' || UPPER(SUBSTRING(gen_random_uuid()::text, 1, 8)), 
+        CURRENT_DATE, 
+        0, 
+        'borrador'
+    )
+    RETURNING id -- Retornamos el ID de la nueva ruta
 )
--- 4. Finalmente, insertamos en detalles_ruta uniendo la ruta y los pedidos generados
+-- Insertamos la relación en detalles_ruta uniendo los CTEs anteriores
 INSERT INTO detalles_ruta (ruta_id, pedido_id, orden_entrega)
 SELECT 
     (SELECT id FROM nueva_ruta), 
     np.id, 
-    row_number() OVER () -- Genera el orden 1, 2, 3, 4 automáticamente
+    ROW_NUMBER() OVER () -- Asigna el orden correlativo automáticamente
 FROM nuevos_pedidos np;
+
+
 
 
 -- ============= QUERYS PARA LA PRESENTACIÓN =============
