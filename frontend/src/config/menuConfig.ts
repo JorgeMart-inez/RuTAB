@@ -43,7 +43,7 @@ export const menuConfig: MenuItem[] = [
     title: "Inicio",
     path: "/panel/inicio",
     icon: List,
-    roles: ["superAdmin", "logístico", "auditor"],
+    roles: ["superAdmin", "logístico"],
   },
   {
     title: "Rutas y Operaciones",
